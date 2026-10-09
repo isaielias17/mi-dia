@@ -237,10 +237,13 @@ const ACT = {
   manos:     { e: '🧼', c: '#cfe6f7', es: 'Lavar manos', en: 'Wash hands', r: 'manos' },
   dientes:   { e: '🪥', c: '#d8f0f0', es: 'Lavar dientes', en: 'Brush teeth', r: 'dientes' },
   vestir:    { e: '👕', c: '#d9dcfb', es: 'Vestirme', en: 'Get dressed', r: 'vestir' },
-  desayuno:  { e: '🥣', c: '#ffe8c7', es: 'Desayunar', en: 'Breakfast' },
-  comida:    { e: '🍽️', c: '#ffdcc2', es: 'Comer', en: 'Lunch' },
+  desayuno:  { e: '🥣', c: '#ffe8c7', es: 'Desayunar', en: 'Breakfast', r: 'comer' },
+  comida:    { e: '🍽️', c: '#ffdcc2', es: 'Comer', en: 'Lunch', r: 'comer' },
   merienda:  { e: '🍎', c: '#ffd5d0', es: 'Merienda', en: 'Snack' },
-  cena:      { e: '🍲', c: '#f6d8c4', es: 'Cenar', en: 'Dinner' },
+  cena:      { e: '🍲', c: '#f6d8c4', es: 'Cenar', en: 'Dinner', r: 'comer' },
+  zapatos:   { e: '👟', c: '#e0e6f2', es: 'Ponerme zapatos', en: 'Put on shoes', r: 'zapatos' },
+  mochila:   { e: '🎒', c: '#f4e3a8', es: 'Preparar mochila', en: 'Pack backpack', r: 'mochila' },
+  recoger:   { e: '🧺', c: '#e9e1d2', es: 'Recoger juguetes', en: 'Clean up toys', r: 'recoger' },
   escuela:   { e: '🏫', c: '#f4e3a8', es: 'Escuela', en: 'School' },
   tarea:     { e: '✏️', c: '#f1e8c4', es: 'Tarea', en: 'Homework' },
   terapia:   { e: '🧩', c: '#d4ecf7', es: 'Terapia', en: 'Therapy' },
@@ -320,6 +323,41 @@ const RUTINAS = {
     ['💡', 'Apagamos la luz.', 'We turn off the light.'],
     ['😴', 'A dormir. ¡Buenas noches!', 'Time to sleep. Good night!'],
   ]},
+  comer: { e: '🍽️', es: 'Hora de comer', en: 'Mealtime', pasos: [
+    ['🧼', 'Me lavo las manos.', 'I wash my hands.'],
+    ['🪑', 'Me siento en mi silla.', 'I sit in my chair.'],
+    ['🙏', 'Damos gracias a Dios por la comida.', 'We thank God for the food.'],
+    ['🥄', 'Como despacito, bocado por bocado.', 'I eat slowly, one bite at a time.'],
+    ['🥛', 'Tomo agua o leche.', 'I drink water or milk.'],
+    ['🧻', 'Me limpio con la servilleta.', 'I wipe my mouth with a napkin.'],
+    ['✋', 'Digo: "Ya terminé".', 'I say: "All done."'],
+    ['🍽️', 'Llevo mi plato a la cocina.', 'I take my plate to the kitchen.'],
+  ]},
+  zapatos: { e: '👟', es: 'Ponerme los zapatos', en: 'Putting on shoes', pasos: [
+    ['🧦', 'Primero, los calcetines.', 'First, my socks.'],
+    ['👟', 'Pongo los zapatos juntitos, con las puntas hacia adelante.', 'I put my shoes side by side, toes pointing forward.'],
+    ['🦶', 'Meto el pie, con la punta primero.', 'I slide my foot in, toes first.'],
+    ['👆', 'Empujo el talón hasta adentro.', 'I push my heel all the way in.'],
+    ['🎀', 'Cierro el velcro o las agujetas. Puedo pedir ayuda.', 'I close the strap or tie the laces. I can ask for help.'],
+    ['👣', 'Ahora el otro pie. ¡List{o} para caminar!', 'Now the other foot. Ready to walk!'],
+  ]},
+  recoger: { e: '🧺', es: 'Recoger mis juguetes', en: 'Cleaning up toys', pasos: [
+    ['⏰', 'Se acabó el tiempo de jugar. Es hora de recoger.', 'Playtime is over. It is time to clean up.'],
+    ['🧸', 'Los muñecos van a su caja.', 'Stuffed toys go in their box.'],
+    ['🚗', 'Los carritos van a su lugar.', 'Toy cars go in their place.'],
+    ['📚', 'Los libros van al librero.', 'Books go on the shelf.'],
+    ['🖍️', 'Los colores van a su bote.', 'Crayons go in their cup.'],
+    ['👀', 'Reviso el piso: ¿falta algo?', 'I check the floor: is anything left?'],
+    ['🌟', '¡Mi cuarto quedó ordenado!', 'My room is all tidy!'],
+  ]},
+  mochila: { e: '🎒', es: 'Preparar mi mochila', en: 'Packing my backpack', pasos: [
+    ['🎒', 'Abro mi mochila.', 'I open my backpack.'],
+    ['📚', 'Guardo mis libros y cuadernos.', 'I put in my books and notebooks.'],
+    ['✏️', 'Guardo mi estuche con lápices.', 'I put in my pencil case.'],
+    ['🥪', 'Guardo mi lonche y mi agua.', 'I put in my lunch and water.'],
+    ['🤐', 'Cierro el cierre.', 'I zip it closed.'],
+    ['🚪', 'La dejo junto a la puerta. ¡Lista para mañana!', 'I leave it by the door. Ready for tomorrow!'],
+  ]},
 };
 
 // Emociones. {o} cambia a "o" o "a" según el ajuste niño/niña
@@ -342,6 +380,12 @@ const EMOCIONES = [
     resp: { es: 'Avísale a un adulto y enséñale dónde te duele.', en: 'Tell a grown-up and show them where it hurts.' } },
   { id: 'calma',    e: '😌', c: '#cdebd6', es: 'Tranquil{o}', en: 'Calm', di: { es: 'Estoy tranquil{o}.', en: 'I feel calm.' },
     resp: { es: '¡Qué bien! Así se siente la calma.', en: 'Great! This is how calm feels.' } },
+  { id: 'sorpresa', e: '😮', c: '#fde2c8', es: 'Sorprendid{o}', en: 'Surprised', di: { es: 'Estoy sorprendid{o}.', en: 'I feel surprised.' },
+    resp: { es: '¡Qué sorpresa! Las sorpresas pueden ser bonitas.', en: 'What a surprise! Surprises can be nice.' } },
+  { id: 'aburrido', e: '😐', c: '#e6e4df', es: 'Aburrid{o}', en: 'Bored', di: { es: 'Estoy aburrid{o}.', en: 'I feel bored.' },
+    resp: { es: 'Podemos buscar algo divertido para hacer.', en: 'We can find something fun to do.' } },
+  { id: 'orgullo',  e: '🤩', c: '#fff0b3', es: 'Orgullos{o}', en: 'Proud', di: { es: 'Estoy orgullos{o} de mí.', en: 'I feel proud of myself.' },
+    resp: { es: '¡Muy bien! Te esforzaste mucho.', en: 'Great! You worked really hard.' } },
 ];
 
 // Herramientas del rincón de calma
@@ -351,6 +395,7 @@ const CALMA = [
   { id: 'musica',   e: '🎶', c: '#e2d6f5', es: 'Música suave', en: 'Soft music' },
   { id: 'mariposa', e: '🦋', c: '#f5d9e6', es: 'Abrazo de mariposa', en: 'Butterfly hug' },
   { id: 'contar',   e: '🔢', c: '#f6e6bf', es: 'Contar despacio', en: 'Slow counting' },
+  { id: 'sentidos', e: '👀', c: '#d4eef5', es: 'Mis 5 sentidos', en: 'My 5 senses' },
   { id: 'orar',     e: '🙏', c: '#f4e2cf', es: 'Orar', en: 'Pray' },
 ];
 const PEDIR = [
@@ -434,6 +479,69 @@ const HISTORIAS = [
     ['🙏💛', 'Oramos juntos. Dios escucha a los niños.', 'We pray together. God listens to children.'],
     ['🏠😊', 'Después regresamos a casa.', 'Afterwards we go back home.'],
   ]},
+  { id: 'dentista', e: '🦷', c: '#d8f0f0', es: 'Voy al dentista', en: 'Going to the dentist', p: [
+    ['🦷🏥', 'Hoy voy al dentista. El dentista cuida mis dientes.', 'Today I am going to the dentist. The dentist takes care of my teeth.'],
+    ['💺💡', 'Me acuesto en una silla que sube y baja. Hay una luz brillante; puedo usar lentes oscuros.', 'I lie back in a chair that goes up and down. There is a bright light; I can wear sunglasses.'],
+    ['😮🪞', 'Abro la boca grande. El dentista cuenta mis dientes con un espejito.', 'I open my mouth wide. The dentist counts my teeth with a little mirror.'],
+    ['💦🔊', 'Un tubito hace "sssh" y se lleva el agua. Es un ruido normal.', 'A little tube goes "sssh" and takes the water away. That is a normal sound.'],
+    ['✋🎈', 'Si necesito una pausa, levanto la mano. Respiro despacio.', 'If I need a break, I raise my hand. I breathe slowly.'],
+    ['✨😁', '¡Listo! Mis dientes están limpios y fuertes.', 'All done! My teeth are clean and strong.'],
+  ]},
+  { id: 'vacuna', e: '💉', c: '#d6eef0', es: 'Me ponen una vacuna', en: 'Getting a shot', p: [
+    ['🩺💉', 'Hoy me van a poner una vacuna. Las vacunas ayudan a cuidar mi cuerpo.', 'Today I am getting a shot. Shots help protect my body.'],
+    ['🤝🪑', 'Me siento con mi adulto. Me puede abrazar fuerte.', 'I sit with my grown-up. They can hug me tight.'],
+    ['💧💪', 'Me limpian el brazo con algo frío.', 'They clean my arm with something cold.'],
+    ['🐝⏱️', 'Se siente como un piquete rápido. Puede doler un poquito.', 'It feels like a quick pinch. It may hurt a little.'],
+    ['🔢🎈', 'Puedo contar hasta diez o respirar despacio. Puedo llorar si lo necesito.', 'I can count to ten or breathe slowly. I can cry if I need to.'],
+    ['🩹⭐', '¡Ya pasó! Me ponen una curita. Fui muy valiente.', 'It is over! I get a bandage. I was very brave.'],
+  ]},
+  { id: 'primerdia', e: '🎒', c: '#f4e3a8', es: 'Mi primer día de clases', en: 'My first day of school', p: [
+    ['🆕🏫', 'Hoy empiezo en un salón nuevo. Es normal sentir nervios.', 'Today I start in a new class. It is normal to feel nervous.'],
+    ['👩‍🏫👋', 'Conozco a mi maestra. Me dice su nombre y me enseña el salón.', 'I meet my teacher. She tells me her name and shows me the classroom.'],
+    ['🪑🏷️', 'Tengo mi propio lugar con mi nombre.', 'I have my own spot with my name on it.'],
+    ['🧒🧒', 'Hay niños nuevos. Poco a poco nos conocemos.', 'There are new kids. Little by little we get to know each other.'],
+    ['🚻🙋', 'Si necesito ir al baño o necesito ayuda, le digo a la maestra.', 'If I need the bathroom or need help, I tell the teacher.'],
+    ['🏠⭐', 'Al final del día vienen por mí. ¡Lo logré!', 'At the end of the day someone picks me up. I did it!'],
+  ]},
+  { id: 'cumple', e: '🎂', c: '#f5d9e6', es: 'Una fiesta de cumpleaños', en: 'A birthday party', p: [
+    ['🎈🎉', 'Voy a una fiesta de cumpleaños.', 'I am going to a birthday party.'],
+    ['👋🎁', 'Saludo y le doy su regalo al festejado. El regalo es para él, no para mí.', 'I say hi and give the present to the birthday kid. The present is for them, not for me.'],
+    ['🔊🎵', 'Puede haber música fuerte y muchos niños. Si es demasiado, pido un descanso.', 'There may be loud music and lots of kids. If it is too much, I ask for a break.'],
+    ['🎂🕯️', 'Cantamos "Las mañanitas". Después el festejado sopla las velas.', 'We sing the birthday song. Then the birthday kid blows out the candles.'],
+    ['🍰😋', 'Comemos pastel. Si no me gusta, puedo decir: "No, gracias".', 'We eat cake. If I do not like it, I can say: "No, thank you."'],
+    ['🏠😊', 'Al final digo "gracias" y regreso a casa.', 'At the end I say "thank you" and go back home.'],
+  ]},
+  { id: 'perder', e: '🎲', c: '#e4efd2', es: 'Cuando no gano', en: 'When I do not win', p: [
+    ['🎲🙂', 'Me gusta jugar juegos con otros.', 'I like to play games with others.'],
+    ['🏆🧒', 'A veces gano. A veces gana otra persona.', 'Sometimes I win. Sometimes someone else wins.'],
+    ['😟💭', 'Si no gano, puedo sentirme triste o enojad{o}. Está bien.', 'If I do not win, I may feel sad or angry. That is okay.'],
+    ['🎈🤝', 'Respiro despacio y digo: "Buen juego".', 'I breathe slowly and say: "Good game."'],
+    ['🔁😊', '¡Podemos jugar otra vez! Lo importante es divertirnos juntos.', 'We can play again! What matters is having fun together.'],
+  ]},
+  { id: 'bebe', e: '👶', c: '#fde2e4', es: 'Llega un bebé a casa', en: 'A new baby at home', p: [
+    ['👨‍👩‍👧👶', 'Mi familia va a tener un bebé.', 'My family is having a baby.'],
+    ['😢🍼', 'Los bebés lloran mucho. Así nos dicen que tienen hambre o sueño.', 'Babies cry a lot. That is how they tell us they are hungry or sleepy.'],
+    ['🤫🛏️', 'Cuando el bebé duerme, hablamos bajito.', 'When the baby is sleeping, we talk quietly.'],
+    ['🤲🎵', 'Puedo ayudar: traer un pañal o cantarle una canción.', 'I can help: bring a diaper or sing a song.'],
+    ['💛🤗', 'Mamá y papá me siguen amando igual. Hay amor para todos.', 'Mom and dad still love me just the same. There is love for everyone.'],
+    ['🙏👶', 'Damos gracias a Dios por nuestra familia.', 'We thank God for our family.'],
+  ]},
+  { id: 'viaje', e: '✈️', c: '#dbe5f0', es: 'Vamos de viaje', en: 'Going on a trip', p: [
+    ['🧳🗺️', 'Vamos a ir de viaje. Mi familia me enseña a dónde vamos.', 'We are going on a trip. My family shows me where we are going.'],
+    ['🎒🧸', 'Llevo mis cosas favoritas: un juguete, mis audífonos y algo de comer.', 'I bring my favorite things: a toy, my headphones, and a snack.'],
+    ['🚗✈️', 'Viajamos en coche o en avión. El viaje puede ser largo.', 'We travel by car or by plane. The trip can be long.'],
+    ['⏳🪟', 'Mientras llegamos, puedo jugar, mirar por la ventana o descansar.', 'On the way, I can play, look out the window, or rest.'],
+    ['🏨🛏️', 'Voy a dormir en una cama diferente. Al principio se siente raro, y está bien.', 'I will sleep in a different bed. At first it feels strange, and that is okay.'],
+    ['🙏💛', 'Dios me acompaña a donde voy. ¡Qué aventura!', 'God goes with me wherever I go. What an adventure!'],
+  ]},
+  { id: 'tormenta', e: '⛈️', c: '#d4dcef', es: 'Cuando hay tormenta', en: 'When there is a storm', p: [
+    ['⛈️🌧️', 'A veces hay tormenta: llueve fuerte y hay truenos.', 'Sometimes there is a storm: heavy rain and thunder.'],
+    ['⚡🏠', 'Los truenos hacen mucho ruido, pero estoy segur{o} dentro de la casa.', 'Thunder is very loud, but I am safe inside the house.'],
+    ['🎧🛋️', 'Puedo taparme los oídos, usar audífonos o abrazar mi cobija.', 'I can cover my ears, wear headphones, or hug my blanket.'],
+    ['🤗👨‍👩‍👧', 'Me quedo cerca de mi familia.', 'I stay close to my family.'],
+    ['🙏💛', 'Dios me cuida, también en la tormenta.', 'God takes care of me, even in the storm.'],
+    ['🌈☀️', 'Las tormentas pasan. Después sale el sol, ¡y a veces un arcoíris!', 'Storms pass. Then the sun comes out, and sometimes a rainbow!'],
+  ]},
   { id: 'ayuda', e: '🙋', c: '#ffd5d0', es: 'Pedir ayuda', en: 'Asking for help', p: [
     ['🧩😣', 'A veces algo es difícil para mí.', 'Sometimes something is hard for me.'],
     ['🙋🗣️', 'Puedo pedir ayuda. Digo: "Ayúdame, por favor."', 'I can ask for help. I say: "Help me, please."'],
@@ -451,6 +559,9 @@ const INICIOS = [
   { e: '💛', c: '#ffe7a8', es: 'Me siento', en: 'I feel' },
   { e: '😍', c: '#f5d9e6', es: 'Me gusta', en: 'I like' },
   { e: '🤕', c: '#f7d3c8', es: 'Me duele', en: 'It hurts:' },
+  { e: '👀', c: '#d4eef5', es: 'Veo', en: 'I see' },
+  { e: '❓', c: '#e4efd2', es: '¿Dónde está', en: 'Where is' },
+  { e: '🤝', c: '#f9e2b0', es: 'Quiero jugar con', en: 'I want to play with' },
   { e: '👍', c: '#cdebd6', es: 'Sí', en: 'Yes' },
   { e: '👎', c: '#f7c6bd', es: 'No', en: 'No' },
   { e: '🙏', c: '#e9e1f5', es: 'por favor', en: 'please' },
@@ -460,7 +571,9 @@ const CATEGORIAS = [
   { id: 'comer', e: '🍎', es: 'Comer y beber', en: 'Food & drinks', c: '#ffe3c9', w: [
     ['💧','agua','water'],['🥛','leche','milk'],['🧃','jugo','juice'],['🍎','manzana','apple'],['🍌','plátano','banana'],
     ['🍇','uvas','grapes'],['🍪','galleta','cookie'],['🍞','pan','bread'],['🌮','tacos','tacos'],['🍕','pizza','pizza'],
-    ['🍚','arroz','rice'],['🥚','huevo','egg'],['🧀','queso','cheese'],['🍲','sopa','soup'],['🍦','helado','ice cream'],['🍽️','comer','to eat']] },
+    ['🍚','arroz','rice'],['🥚','huevo','egg'],['🧀','queso','cheese'],['🍲','sopa','soup'],['🍦','helado','ice cream'],
+    ['🍗','pollo','chicken'],['🥣','cereal','cereal'],['🥕','zanahoria','carrot'],['🍓','fresas','strawberries'],['🍉','sandía','watermelon'],
+    ['🍊','naranja','orange'],['🍟','papas fritas','fries'],['🍿','palomitas','popcorn'],['🍫','chocolate','chocolate'],['🍽️','comer','to eat']] },
   { id: 'jugar', e: '🧸', es: 'Jugar', en: 'Play', c: '#f9e2b0', w: [
     ['🧸','jugar','to play'],['⚽','la pelota','the ball'],['🧱','bloques','blocks'],['🎨','pintar','to paint'],['🎵','música','music'],
     ['📱','la tableta','the tablet'],['📚','un libro','a book'],['🛝','columpio','the swing'],['🫧','burbujas','bubbles'],['🚗','carritos','toy cars'],
@@ -470,16 +583,29 @@ const CATEGORIAS = [
     ['🛒','ir a la tienda','to go to the store'],['🏫','ir a la escuela','to go to school'],['⛪','ir a la iglesia','to go to church'],['🛏️','ir a la cama','to go to bed'],['🚗','ir en el coche','a car ride']] },
   { id: 'personas', e: '👨‍👩‍👧', es: 'Personas', en: 'People', c: '#f5dbe3', w: [
     ['👩','mamá','mom'],['👨','papá','dad'],['👦','mi hermano','my brother'],['👧','mi hermana','my sister'],['👵','abuela','grandma'],
-    ['👴','abuelo','grandpa'],['👩‍🏫','maestra','teacher'],['🧒','mi amigo','my friend'],['👶','el bebé','the baby'],['🙏','Dios','God']] },
+    ['👴','abuelo','grandpa'],['👩‍🏫','maestra','teacher'],['🧒','mi amigo','my friend'],['👶','el bebé','the baby'],['🧑‍⚕️','el doctor','the doctor'],
+    ['🧩','mi terapeuta','my therapist'],['🐾','mi mascota','my pet'],['🙏','Dios','God']] },
+  { id: 'animales', e: '🐶', es: 'Animales', en: 'Animals', c: '#e4efd2', w: [
+    ['🐶','el perro','the dog'],['🐱','el gato','the cat'],['🐦','el pájaro','the bird'],['🐟','el pez','the fish'],['🐰','el conejo','the rabbit'],
+    ['🐴','el caballo','the horse'],['🐮','la vaca','the cow'],['🐑','la oveja','the sheep'],['🦁','el león','the lion'],['🐘','el elefante','the elephant'],
+    ['🦋','la mariposa','the butterfly'],['🐢','la tortuga','the turtle']] },
+  { id: 'ropa', e: '👕', es: 'Ropa', en: 'Clothes', c: '#d9dcfb', w: [
+    ['👕','la camisa','my shirt'],['👖','el pantalón','my pants'],['👗','el vestido','my dress'],['🩳','los shorts','my shorts'],['🧦','los calcetines','my socks'],
+    ['👟','los zapatos','my shoes'],['🧥','la chamarra','my jacket'],['🧢','la gorra','my cap'],['🩲','la ropa interior','my underwear'],['🎧','los audífonos','my headphones'],['👓','los lentes','my glasses']] },
+  { id: 'colores', e: '🎨', es: 'Colores', en: 'Colors', c: '#f5d9e6', w: [
+    ['🔴','rojo','red'],['🔵','azul','blue'],['🟡','amarillo','yellow'],['🟢','verde','green'],['🟠','naranja','orange'],
+    ['🟣','morado','purple'],['🌸','rosa','pink'],['🟤','café','brown'],['⚫','negro','black'],['⚪','blanco','white']] },
   { id: 'cuerpo', e: '🤕', es: 'Mi cuerpo', en: 'My body', c: '#f7d3c8', w: [
     ['🤕','la cabeza','my head'],['🤢','la panza','my tummy'],['🦷','los dientes','my teeth'],['👂','el oído','my ear'],['👁️','el ojo','my eye'],
     ['👃','la nariz','my nose'],['✋','la mano','my hand'],['🦵','la pierna','my leg'],['🦶','el pie','my foot'],['🗣️','la garganta','my throat']] },
   { id: 'sentir', e: '😊', es: 'Sentimientos', en: 'Feelings', c: '#ffe7a8', w: [
     ['😊','feliz','happy'],['😢','triste','sad'],['😠','enojad{o}','angry'],['😨','asustad{o}','scared'],['😟','nervios{o}','worried'],
-    ['🥱','cansad{o}','tired'],['😌','tranquil{o}','calm'],['🤒','enferm{o}','sick'],['🙉','con mucho ruido','it is too loud'],['🥰','con amor','loved']] },
+    ['🥱','cansad{o}','tired'],['😌','tranquil{o}','calm'],['🤒','enferm{o}','sick'],['🙉','con mucho ruido','it is too loud'],['🥰','con amor','loved'],
+    ['😮','sorprendid{o}','surprised'],['😐','aburrid{o}','bored'],['🤩','orgullos{o}','proud']] },
   { id: 'acciones', e: '✋', es: 'Acciones', en: 'Actions', c: '#d9dcfb', w: [
     ['➕','más','more'],['✋','ya terminé','all done'],['🛑','alto','stop'],['🔁','otra vez','again'],['🙋','ayuda','help'],
-    ['📦','abrir','to open'],['👀','ver','to see'],['😴','dormir','to sleep'],['🤗','un abrazo','a hug'],['⏳','esperar','to wait'],['☝️','mi turno','my turn'],['🤫','silencio','quiet']] },
+    ['📦','abrir','to open'],['👀','ver','to see'],['😴','dormir','to sleep'],['🤗','un abrazo','a hug'],['⏳','esperar','to wait'],['☝️','mi turno','my turn'],['🤫','silencio','quiet'],
+    ['🤲','dame','give me'],['👉','mira','look'],['🏃','vamos','let\'s go'],['🎶','cantar','to sing'],['💃','bailar','to dance'],['📖','leer','to read']] },
 ];
 
 // Juegos que enseñan
@@ -505,7 +631,18 @@ const SITUACIONES = [
   ['👋🚚', 'Su mejor amigo se mudó lejos.', 'His best friend moved far away.', 'triste'],
   ['🧸✋', 'Le quitaron su juguete sin preguntar.', 'Someone took her toy without asking.', 'enojo'],
 ];
-const PARECIDAS = { miedo: 'nervios', nervios: 'miedo', triste: 'duele', duele: 'triste', cansado: 'calma', calma: 'cansado' };   // no salen juntas
+SITUACIONES.push(
+  ['🎁😮', 'Abrió la puerta y todos gritaron: "¡Sorpresa!"', 'He opened the door and everyone shouted: "Surprise!"', 'sorpresa'],
+  ['🌧️🏠', 'Llueve, y en casa no hay nada que hacer.', 'It is raining, and there is nothing to do at home.', 'aburrido'],
+  ['🧩🏆', 'La niña terminó sola un rompecabezas muy difícil.', 'The girl finished a very hard puzzle all by herself.', 'orgullo'],
+  ['🚲🎉', 'El niño aprendió a andar en bicicleta.', 'The boy learned to ride a bike.', 'orgullo'],
+);
+// Emociones que se parecen: no salen juntas como opciones
+const PARECIDAS = {
+  miedo: ['nervios', 'sorpresa'], nervios: ['miedo'], triste: ['duele', 'aburrido'], duele: ['triste'], cansado: ['calma', 'aburrido'], calma: ['cansado'],
+  feliz: ['orgullo', 'sorpresa'], orgullo: ['feliz', 'sorpresa'], sorpresa: ['feliz', 'miedo', 'orgullo'], aburrido: ['cansado', 'triste'],
+};
+const parecida = (a, b) => (PARECIDAS[a] || []).includes(b);
 // ¿Qué hago si…? [escena, situación es, en, [buena], [otra], por qué es, en]
 const DILEMAS = [
   ['🧒😠', 'Un niño te empuja.', 'A kid pushes you.', ['✋', 'Digo "¡Alto!" y le aviso a un adulto', 'I say "Stop!" and tell a grown-up'], ['😡', 'Le grito cosas feas', 'I yell mean things'],
@@ -533,6 +670,17 @@ const DILEMAS = [
   ['📅🔄', 'Cambió el plan del día.', 'The plan for the day changed.', ['📅', 'Veo mi nuevo plan', 'I look at my new plan'], ['🙉', 'No escucho a nadie', 'I don\'t listen to anyone'],
     'Ver el nuevo plan te ayuda a saber qué sigue.', 'Seeing the new plan helps you know what comes next.'],
 ];
+DILEMAS.push(
+  ['🎲😕', 'Perdiste un juego.', 'You lost a game.', ['🤝', 'Digo "Buen juego"', 'I say "Good game"'], ['💢', 'Aviento el juego', 'I throw the game'],
+    'Decir "buen juego" hace que todos quieran jugar otra vez contigo.', 'Saying "good game" makes everyone want to play with you again.'],
+  ['🧒🙋', 'Un amigo te pide ayuda.', 'A friend asks you for help.', ['🤝', 'Le ayudo', 'I help them'], ['🙄', 'Hago como que no oigo', 'I pretend I did not hear'],
+    'Ayudar a otros es una forma de amar, como nos enseña Dios.', 'Helping others is a way to love, just like God teaches us.'],
+  ['🥛💦', 'Sin querer, tiraste el vaso de tu hermano.', 'By accident, you spilled your brother\'s cup.', ['🙏', 'Digo "Perdón" y ayudo a limpiar', 'I say "Sorry" and help clean up'], ['🙈', 'Me escondo', 'I hide'],
+    'Todos nos equivocamos. Pedir perdón y ayudar lo arregla.', 'Everyone makes mistakes. Saying sorry and helping makes it better.'],
+  ['🧑🍬', 'Una persona que no conoces te ofrece dulces y te dice "ven".', 'A stranger offers you candy and says "come with me".', ['🏃', 'Digo "¡No!" y corro con mi adulto', 'I say "No!" and run to my grown-up'], ['🍬', 'Me voy con esa persona', 'I go with that person'],
+    'Nunca te vayas con alguien que no conoces. Tu adulto te cuida.', 'Never go with someone you do not know. Your grown-up keeps you safe.'],
+);
+
 // ¿Qué va primero?: grupos de 3 pasos (índices de RUTINAS) que solo tienen un orden lógico
 const TRIOS = {
   bano: [[0, 1, 4], [4, 5, 7], [2, 4, 7]],
@@ -541,6 +689,10 @@ const TRIOS = {
   vestir: [[0, 1, 5], [3, 4, 5]],
   banarse: [[0, 1, 7], [3, 5, 6], [1, 2, 6]],
   dormir: [[0, 6, 7], [3, 6, 7]],
+  comer: [[0, 1, 7], [1, 3, 6], [2, 6, 7]],
+  zapatos: [[0, 2, 4], [2, 3, 5]],
+  recoger: [[0, 1, 6], [0, 5, 6]],
+  mochila: [[0, 1, 4], [3, 4, 5]],
 };
 const PARES = [
   ['🐶', 'perro', 'dog'], ['🐱', 'gato', 'cat'], ['🐰', 'conejo', 'rabbit'], ['🦁', 'león', 'lion'], ['🐘', 'elefante', 'elephant'], ['🐢', 'tortuga', 'turtle'],
@@ -1061,6 +1213,39 @@ const HERRAMIENTAS = {
     hablar({ es: 'Contamos despacio, juntos.', en: 'We count slowly, together.' }, () => luego(500, () => paso(1)));
   },
 
+  // 5-4-3-2-1: busca cosas con cada sentido; cada toque llena un círculo
+  sentidos(paso = 0) {
+    const PASOS = [
+      [5, '👀', 'Busca 5 cosas que puedes ver.', 'Find 5 things you can see.'],
+      [4, '✋', 'Busca 4 cosas que puedes tocar.', 'Find 4 things you can touch.'],
+      [3, '👂', 'Escucha 3 sonidos.', 'Listen for 3 sounds.'],
+      [2, '👃', 'Busca 2 cosas que puedes oler.', 'Find 2 things you can smell.'],
+      [1, '🎈', 'Respira profundo una vez.', 'Take one deep breath.'],
+    ];
+    if (paso >= PASOS.length) {
+      vista.innerHTML = `<div class="centro"><div style="font-size:90px">🌟</div><div>${rot({ es: '¡Muy bien! Estás aquí, a salvo.', en: 'Great job! You are here, and you are safe.' })}</div>
+        <button class="boton" id="otra">🔁 ${tx({ es: 'Otra vez', en: 'Again' }, lenguas()[0])}</button></div>`;
+      vista.querySelector('#otra').onclick = () => { toque(); ir('herramienta', 'sentidos'); };
+      hablar({ es: '¡Muy bien! Estás aquí, a salvo.', en: 'Great job! You are here, and you are safe.' });
+      ganarEstrella();
+      return;
+    }
+    const [n, e, es, en] = PASOS[paso];
+    vista.innerHTML = `<div class="centro"><div style="font-size:90px">${e}</div><div>${rot({ es, en })}</div>
+      <div class="conteo" style="grid-template-columns:repeat(${n}, 1fr)">${'<i></i>'.repeat(n)}</div>
+      <button class="boton verde" id="uno" style="font-size:22px;padding:16px 26px">✓ ${tx({ es: '¡Encontré una!', en: 'Found one!' }, lenguas()[0])}</button></div>`;
+    const ps = vista.querySelectorAll('.conteo i');
+    let k = 0;
+    vista.querySelector('#uno').onclick = () => {
+      if (k >= n) return;
+      ps[k].classList.add('si'); ps[k].textContent = k + 1; k++;
+      tono(PENTA[k + 2], 0.5, 0.04);
+      if (k < n) hablar({ es: NUM.es[k], en: NUM.en[k] });
+      else hablar([{ es: NUM.es[k], en: NUM.en[k] }, azar(BIEN)], () => luego(500, () => HERRAMIENTAS.sentidos(paso + 1)));
+    };
+    hablar({ es, en });
+  },
+
   orar() {
     const ora = { es: 'Dios, gracias porque me cuidas y me amas. Ayúdame a estar en calma. Amén.', en: 'God, thank you for taking care of me and loving me. Help me feel calm. Amen.' };
     const ver = { es: 'Cuando tengo miedo, confío en ti. (Salmo 56:3)', en: 'When I am afraid, I trust in you. (Psalm 56:3)' };
@@ -1134,7 +1319,7 @@ VISTAS.juegos = () => {
 const PREPARAR = {
   cara: () => revolver(EMOCIONES.filter(e => e.id !== 'demasiado')).slice(0, 5).map(em => ({
     escena: '❓', pregunta: { es: `¿Dónde está la cara ${em.es.replaceAll('{o}', 'a').toLowerCase()}?`, en: `Where is the ${em.en.toLowerCase()} face?` },
-    opciones: revolver([em, ...revolver(EMOCIONES.filter(x => x.id !== em.id && x.id !== PARECIDAS[em.id] && x.id !== 'demasiado')).slice(0, 2)])
+    opciones: revolver([em, ...revolver(EMOCIONES.filter(x => x.id !== em.id && !parecida(em.id, x.id) && x.id !== 'demasiado')).slice(0, 2)])
       .map(x => ({ e: x.e, c: x.c, es: x.es, en: x.en, ok: x === em })),
     bien: em.di,
   })).map(r => { r.pregunta.es = r.pregunta.es.replace('cara me duele', 'cara que dice "me duele"'); r.pregunta.en = r.pregunta.en.replace('it hurts face', '"it hurts" face'); return r; }),
@@ -1145,7 +1330,7 @@ const PREPARAR = {
       : { es: `Se siente ${em.es.replaceAll('{o}', g).toLowerCase()}.`, en: `${ella ? 'She' : 'He'} feels ${em.en.toLowerCase()}.` };
     return {
       escena, situacion: { es, en }, pregunta: { es: '¿Cómo se siente?', en: ella ? 'How does she feel?' : 'How does he feel?' },
-      opciones: revolver([em, ...revolver(EMOCIONES.filter(x => x.id !== id && x.id !== PARECIDAS[id])).slice(0, 2)])
+      opciones: revolver([em, ...revolver(EMOCIONES.filter(x => x.id !== id && !parecida(id, x.id))).slice(0, 2)])
         .map(x => ({ e: x.e, c: x.c, es: x.es.replaceAll('{o}', g), en: x.en, ok: x === em })),
       bien,
     };
