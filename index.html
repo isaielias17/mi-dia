@@ -129,6 +129,41 @@
   /* Historias (lista) */
   .lista-hist { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
   .lista-hist .carta { height: 170px; position: relative; }
+  /* Juegos */
+  .juego { display: grid; grid-template-rows: auto minmax(0, 1fr) minmax(0, 1.15fr); gap: 12px; height: 100%; }
+  .juego .escena .emo { font-size: min(40cqh, 30cqw); }
+  .opciones-j { display: grid; gap: 12px; min-height: 0; }
+  .carta.apagada { opacity: .35; }
+  .carta.bien { outline: 6px solid #6cc28a; outline-offset: -6px; }
+  .carta.pista { outline: 6px solid #f2c94c; outline-offset: -6px; animation: latido 1s ease-in-out infinite; }
+  @keyframes latido { 50% { transform: scale(1.04); } }
+  .carta.larga .es { font-size: min(9.5cqh, 11cqw); }
+  .carta.larga .en { font-size: min(7cqh, 8.5cqw); }
+  .carta.larga .emo { font-size: min(34cqh, 40cqw); }
+  .orden { display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 12px; height: 100%; }
+  .orden h2 { text-align: center; font-size: 20px; }
+  .orden h2 small { display: block; font-size: 15px; color: var(--muted); font-weight: 600; }
+  .huecos { display: flex; gap: 10px; justify-content: center; }
+  .hueco { width: min(26vw, 120px); aspect-ratio: 1; border-radius: 22px; border: 3px dashed #c9c2b5; display: grid; place-items: center; font-size: min(13vw, 60px); position: relative; background: #ffffff60; }
+  .hueco b { position: absolute; top: 4px; left: 10px; font-size: 16px; color: var(--muted); }
+  .hueco.lleno { border-style: solid; border-color: #6cc28a; background: #e6f6ea; animation: salto .5s; }
+  .filas-orden { display: grid; gap: 10px; align-content: start; overflow-y: auto; }
+  .paso-btn { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 10px; text-align: left; border-radius: 20px; background: var(--c, var(--carta)); box-shadow: 0 4px 0 var(--sombra); padding: 10px 14px; min-height: 84px; color: #2f3640; }
+  .paso-btn .e { font-size: 44px; text-align: center; }
+  .paso-btn .es { display: block; font-size: 18px; font-weight: 800; line-height: 1.2; }
+  .paso-btn .en { display: block; font-size: 14px; font-weight: 600; opacity: .65; }
+  .paso-btn.usado { display: none; }
+  .paso-btn.pista { outline: 5px solid #f2c94c; animation: latido 1s ease-in-out infinite; }
+  .paso-btn.mueve { animation: menear .4s; }
+  @keyframes menear { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .mesa { display: grid; gap: 12px; height: 100%; }
+  .mem { border-radius: 22px; background: #c9dcf5; box-shadow: 0 4px 0 var(--sombra); font-size: min(12vw, 9vh, 72px); display: grid; place-items: center; transition: transform .3s, background .3s; }
+  .mem::before { content: "🌟"; opacity: .55; font-size: .6em; }
+  .mem.abierta, .mem.par { background: #fff; transform: rotateY(180deg); }
+  .mem.abierta::before, .mem.par::before { content: none; }
+  .mem span { display: none; transform: rotateY(180deg); }
+  .mem.abierta span, .mem.par span { display: block; }
+  .mem.par { box-shadow: 0 0 0 5px #6cc28a; }
   .lista-hist .carta.leida::after { content: "⭐"; position: absolute; top: 8px; right: 12px; font-size: 20px; }
 
   /* Hablo */
@@ -447,6 +482,71 @@ const CATEGORIAS = [
     ['📦','abrir','to open'],['👀','ver','to see'],['😴','dormir','to sleep'],['🤗','un abrazo','a hug'],['⏳','esperar','to wait'],['☝️','mi turno','my turn'],['🤫','silencio','quiet']] },
 ];
 
+// Juegos que enseñan
+const JUEGOS = [
+  { id: 'cara',    e: '😊', c: '#ffe7a8', es: 'Encuentra la cara', en: 'Find the face' },
+  { id: 'siente',  e: '💭', c: '#c9dcf5', es: '¿Cómo se siente?', en: 'How do they feel?' },
+  { id: 'hago',    e: '🤔', c: '#cdebd6', es: '¿Qué hago si…?', en: 'What do I do if…?' },
+  { id: 'orden',   e: '🔢', c: '#d9dcfb', es: '¿Qué va primero?', en: 'What comes first?' },
+  { id: 'memoria', e: '🃏', c: '#f5d9e6', es: 'Memoria', en: 'Memory' },
+];
+// ¿Cómo se siente? [escena, español, inglés, emoción]
+const SITUACIONES = [
+  ['🍦💧', 'Al niño se le cayó su helado.', 'The boy dropped his ice cream.', 'triste'],
+  ['🎂🎁', 'Es el cumpleaños de la niña y le dan un regalo.', 'It is the girl\'s birthday and she gets a present.', 'feliz'],
+  ['🧱💥', 'Alguien tumbó la torre que el niño construyó.', 'Someone knocked down the tower the boy built.', 'enojo'],
+  ['🌩️🌙', 'En la noche hay truenos muy fuertes.', 'There is loud thunder at night.', 'miedo'],
+  ['⚽🌙', 'La niña jugó todo el día y ya es de noche.', 'The girl played all day and now it is night.', 'cansado'],
+  ['🎉🔊', 'En la fiesta hay mucho ruido y mucha gente.', 'At the party there is lots of noise and lots of people.', 'demasiado'],
+  ['🦵🩹', 'El niño se cayó y se raspó la rodilla.', 'The boy fell and scraped his knee.', 'duele'],
+  ['🛁🎶', 'Después del baño, la niña escucha música suave.', 'After her bath, the girl listens to soft music.', 'calma'],
+  ['🏫🆕', 'Mañana es su primer día en una escuela nueva.', 'Tomorrow is his first day at a new school.', 'nervios'],
+  ['🐶🤗', 'Su perrito corre a saludarla.', 'Her puppy runs to say hello.', 'feliz'],
+  ['👋🚚', 'Su mejor amigo se mudó lejos.', 'His best friend moved far away.', 'triste'],
+  ['🧸✋', 'Le quitaron su juguete sin preguntar.', 'Someone took her toy without asking.', 'enojo'],
+];
+const PARECIDAS = { miedo: 'nervios', nervios: 'miedo', triste: 'duele', duele: 'triste', cansado: 'calma', calma: 'cansado' };   // no salen juntas
+// ¿Qué hago si…? [escena, situación es, en, [buena], [otra], por qué es, en]
+const DILEMAS = [
+  ['🧒😠', 'Un niño te empuja.', 'A kid pushes you.', ['✋', 'Digo "¡Alto!" y le aviso a un adulto', 'I say "Stop!" and tell a grown-up'], ['😡', 'Le grito cosas feas', 'I yell mean things'],
+    'Decir "alto" y avisar a un adulto te mantiene seguro.', 'Saying "stop" and telling a grown-up keeps you safe.'],
+  ['🧸🧒', 'Quieres el juguete que tiene otro niño.', 'You want the toy another kid has.', ['🗣️', 'Pregunto: "¿Me lo prestas?"', 'I ask: "Can I have a turn?"'], ['✊', 'Se lo quito', 'I grab it'],
+    'Preguntar es amable, y así los dos pueden jugar.', 'Asking is kind, and that way you can both play.'],
+  ['🎉🔊', 'Hay demasiado ruido.', 'It is way too loud.', ['🎧', 'Me tapo los oídos y pido un descanso', 'I cover my ears and ask for a break'], ['😫', 'Grito más fuerte', 'I scream louder'],
+    'Un descanso en un lugar tranquilo ayuda a tu cuerpo.', 'A break in a quiet place helps your body.'],
+  ['🧩😣', 'Algo es muy difícil.', 'Something is very hard.', ['🙋', 'Pido ayuda', 'I ask for help'], ['🗑️', 'Lo aviento', 'I throw it'],
+    'Pedir ayuda es de valientes. Todos necesitamos ayuda.', 'Asking for help is brave. Everyone needs help.'],
+  ['🆕🧒', 'Llega un niño nuevo al salón.', 'A new kid comes to class.', ['👋', 'Le digo "hola"', 'I say "hi"'], ['😝', 'Me burlo de él', 'I make fun of him'],
+    'Un saludo hace que el niño nuevo se sienta bienvenido.', 'A hello makes the new kid feel welcome.'],
+  ['😢🧒', 'Tu amigo está llorando.', 'Your friend is crying.', ['🤗', 'Le pregunto: "¿Estás bien?"', 'I ask: "Are you okay?"'], ['😂', 'Me río', 'I laugh'],
+    'Preguntar cómo está muestra que te importa.', 'Asking how they are shows that you care.'],
+  ['🍽️✋', 'Ya no quieres comer.', 'You do not want to eat anymore.', ['🗣️', 'Digo "Ya terminé"', 'I say "All done"'], ['🍝', 'Tiro la comida', 'I throw my food'],
+    'Con palabras, los demás saben lo que necesitas.', 'With words, others know what you need.'],
+  ['🛝⏳', 'Hay fila para el columpio.', 'There is a line for the swing.', ['⏳', 'Espero mi turno', 'I wait for my turn'], ['🏃', 'Me meto adelante', 'I cut in line'],
+    'Esperar tu turno es justo para todos.', 'Waiting your turn is fair for everyone.'],
+  ['🚽❗', 'Tienes ganas de ir al baño.', 'You need to go potty.', ['🙋', 'Aviso: "Necesito ir al baño"', 'I say: "I need to go potty"'], ['🤐', 'No digo nada', 'I don\'t say anything'],
+    'Avisar a tiempo te ayuda a llegar al baño.', 'Telling in time helps you get to the bathroom.'],
+  ['🍪🙂', 'Alguien te da algo rico.', 'Someone gives you a treat.', ['💖', 'Digo "Gracias"', 'I say "Thank you"'], ['🤷', 'Me lo como y ya', 'I just eat it'],
+    'Dar las gracias hace feliz a la otra persona.', 'Saying thank you makes the other person happy.'],
+  ['😠💢', 'Te sientes muy enojad{o}.', 'You feel very angry.', ['🎈', 'Respiro despacio', 'I breathe slowly'], ['💥', 'Rompo mis cosas', 'I break my things'],
+    'Respirar despacio ayuda a que el enojo se vaya.', 'Breathing slowly helps the anger go away.'],
+  ['📅🔄', 'Cambió el plan del día.', 'The plan for the day changed.', ['📅', 'Veo mi nuevo plan', 'I look at my new plan'], ['🙉', 'No escucho a nadie', 'I don\'t listen to anyone'],
+    'Ver el nuevo plan te ayuda a saber qué sigue.', 'Seeing the new plan helps you know what comes next.'],
+];
+// ¿Qué va primero?: grupos de 3 pasos (índices de RUTINAS) que solo tienen un orden lógico
+const TRIOS = {
+  bano: [[0, 1, 4], [4, 5, 7], [2, 4, 7]],
+  manos: [[0, 2, 6], [1, 2, 4], [3, 4, 5]],
+  dientes: [[0, 1, 4], [4, 5, 6], [0, 3, 6]],
+  vestir: [[0, 1, 5], [3, 4, 5]],
+  banarse: [[0, 1, 7], [3, 5, 6], [1, 2, 6]],
+  dormir: [[0, 6, 7], [3, 6, 7]],
+};
+const PARES = [
+  ['🐶', 'perro', 'dog'], ['🐱', 'gato', 'cat'], ['🐰', 'conejo', 'rabbit'], ['🦁', 'león', 'lion'], ['🐘', 'elefante', 'elephant'], ['🐢', 'tortuga', 'turtle'],
+  ['🐟', 'pez', 'fish'], ['🦋', 'mariposa', 'butterfly'], ['🍎', 'manzana', 'apple'], ['🍌', 'plátano', 'banana'], ['⭐', 'estrella', 'star'], ['🌈', 'arcoíris', 'rainbow'],
+];
+
 const NUM = {
   es: ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez'],
   en: ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'],
@@ -457,6 +557,7 @@ const PUERTAS = [
   { id: 'calma',     e: '🌙', c: '#d4dcef', es: 'Rincón de calma', en: 'Calm corner' },
   { id: 'historias', e: '📖', c: '#f5dbe3', es: 'Historias', en: 'Stories' },
   { id: 'hablo',     e: '🗣️', c: '#cdebd6', es: 'Hablo', en: 'I talk' },
+  { id: 'juegos',    e: '🎮', c: '#f9e2b0', es: 'Juegos', en: 'Games' },
 ];
 
 // =====================================================================
@@ -469,7 +570,8 @@ const E = {
   genero: leer('genero', 'o'),              // o = niño, a = niña (para "cansado/cansada")
   lento: leer('lento', true),               // voz despacio
   sonidos: leer('sonidos', true),
-  puertas: leer('puertas', { agenda: true, sentir: true, calma: true, historias: true, hablo: true }),
+  puertas: { agenda: true, sentir: true, calma: true, historias: true, hablo: true, juegos: true, ...leer('puertas', {}) },   // las puertas nuevas aparecen solas
+  memNivel: leer('memNivel', 3),            // pares en el juego de memoria (3 a 6)
   agenda: leer('agenda', AGENDA_INICIAL).filter(id => ACT[id]),
   dia: leer('dia', { fecha: '', i: 0 }),     // hasta dónde va la agenda de hoy
   estrellas: leer('estrellas', 0),
@@ -1012,6 +1114,166 @@ VISTAS.historia = ({ id, pag = 0 }) => {
   caja.querySelector('#sig').onclick = () => { toque(); ir('historia', { id, pag: pag + 1 }); };
   luego(250, decir);
 };
+
+// ---------- Juegos que enseñan ----------
+const revolver = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const azar = a => a[Math.floor(Math.random() * a.length)];
+const BIEN = [{ es: '¡Muy bien!', en: 'Great job!' }, { es: '¡Eso es!', en: 'That\'s it!' }, { es: '¡Excelente!', en: 'Excellent!' }, { es: '¡Lo encontraste!', en: 'You found it!' }];
+const OTRA = [{ es: 'Mmm… intenta otra vez.', en: 'Hmm… try again.' }, { es: 'Casi. ¡Tú puedes!', en: 'Almost. You can do it!' }];
+let J = null;   // partida actual: { id, ronda, n, rondas[] }
+
+VISTAS.juegos = () => {
+  titulo({ es: 'Juegos', en: 'Games' });
+  const r = document.createElement('div'); r.className = 'rejilla';
+  for (const j of JUEGOS) r.appendChild(carta(j, () => { ir('juego', { id: j.id }); hablar(j); }));
+  vista.appendChild(r);
+  acomodar(r, JUEGOS.length);
+};
+
+// Prepara las rondas de cada juego (5 por partida, sin repetir)
+const PREPARAR = {
+  cara: () => revolver(EMOCIONES.filter(e => e.id !== 'demasiado')).slice(0, 5).map(em => ({
+    escena: '❓', pregunta: { es: `¿Dónde está la cara ${em.es.replaceAll('{o}', 'a').toLowerCase()}?`, en: `Where is the ${em.en.toLowerCase()} face?` },
+    opciones: revolver([em, ...revolver(EMOCIONES.filter(x => x.id !== em.id && x.id !== PARECIDAS[em.id] && x.id !== 'demasiado')).slice(0, 2)])
+      .map(x => ({ e: x.e, c: x.c, es: x.es, en: x.en, ok: x === em })),
+    bien: em.di,
+  })).map(r => { r.pregunta.es = r.pregunta.es.replace('cara me duele', 'cara que dice "me duele"'); r.pregunta.en = r.pregunta.en.replace('it hurts face', '"it hurts" face'); return r; }),
+  siente: () => revolver(SITUACIONES).slice(0, 5).map(([escena, es, en, id]) => {
+    const em = EMOCIONES.find(x => x.id === id), ella = /\b(she|her|girl)\b/i.test(en), g = ella ? 'a' : 'o';   // niño o niña de la historia
+    const bien = id === 'duele' ? { es: 'Le duele.', en: 'It hurts.' }
+      : id === 'demasiado' ? { es: `Es demasiado para ${ella ? 'ella' : 'él'}.`, en: `It is too much for ${ella ? 'her' : 'him'}.` }
+      : { es: `Se siente ${em.es.replaceAll('{o}', g).toLowerCase()}.`, en: `${ella ? 'She' : 'He'} feels ${em.en.toLowerCase()}.` };
+    return {
+      escena, situacion: { es, en }, pregunta: { es: '¿Cómo se siente?', en: ella ? 'How does she feel?' : 'How does he feel?' },
+      opciones: revolver([em, ...revolver(EMOCIONES.filter(x => x.id !== id && x.id !== PARECIDAS[id])).slice(0, 2)])
+        .map(x => ({ e: x.e, c: x.c, es: x.es.replaceAll('{o}', g), en: x.en, ok: x === em })),
+      bien,
+    };
+  }),
+  hago: () => revolver(DILEMAS).slice(0, 5).map(([escena, es, en, b, o, pes, pen]) => ({
+    escena, situacion: { es, en }, pregunta: { es: '¿Qué hago?', en: 'What do I do?' }, larga: true,
+    opciones: revolver([{ e: b[0], c: '#d4eef5', es: b[1], en: b[2], ok: true }, { e: o[0], c: '#f3e6d8', es: o[1], en: o[2], ok: false }]),
+    bien: { es: pes, en: pen },
+  })),
+  orden: () => revolver(Object.entries(TRIOS).flatMap(([id, ts]) => ts.map(t => ({ rutina: RUTINAS[id], pasos: t.map(k => RUTINAS[id].pasos[k]) })))).slice(0, 5),
+};
+
+VISTAS.juego = ({ id, nuevo = true }) => {
+  const j = JUEGOS.find(x => x.id === id);
+  titulo(j);
+  volverA = () => ir('juegos');
+  if (id === 'memoria') return memoria();
+  if (nuevo || !J || J.id !== id) J = { id, ronda: 0, rondas: PREPARAR[id]() };
+  if (J.ronda >= J.rondas.length) return finJuego(id);
+  const R = J.rondas[J.ronda];
+  const puntos = `<div class="puntos">${J.rondas.map((_, k) => `<i class="${k < J.ronda ? 'si' : ''}"></i>`).join('')}</div>`;
+  const siguiente = () => { J.ronda++; ir('juego', { id, nuevo: false }); };
+  id === 'orden' ? rondaOrden(R, puntos, siguiente) : rondaOpciones(R, puntos, siguiente);
+};
+
+function rondaOpciones(R, puntos, siguiente) {
+  const caja = document.createElement('div'); caja.className = 'juego';
+  const texto = R.situacion ? `${rot(R.situacion)}<span class="en" style="color:var(--fg);opacity:1;font-weight:800">${tx(R.pregunta, lenguas()[0])}</span>` : rot(R.pregunta);
+  caja.innerHTML = `${puntos}<button class="escena"><span class="emo">${R.escena}</span><div>${texto}</div></button><div class="opciones-j"></div>`;
+  const ops = caja.querySelector('.opciones-j');
+  ops.style.gridTemplateColumns = `repeat(${R.opciones.length}, 1fr)`;
+  vista.appendChild(caja);
+  const decirPregunta = () => hablar(R.situacion ? [R.situacion, R.pregunta] : R.pregunta);
+  let fallos = 0, listo = false;
+  for (const o of R.opciones) {
+    const b = carta(o, () => {
+      if (listo) return;
+      if (o.ok) {
+        listo = true; b.classList.remove('pista'); b.classList.add('bien'); festejar(3);
+        hablar([azar(BIEN), R.bien], () => luego(700, siguiente));
+      } else {
+        if (b.classList.contains('apagada')) { hablar(o); return; }
+        fallos++; b.classList.add('apagada'); tono(330, 0.3, 0.03);
+        hablar([o, azar(OTRA)]);
+        if (fallos >= 2 || R.opciones.length === 2) ops.querySelector('.ok')?.classList.add('pista');
+      }
+    }, (o.ok ? 'ok ' : '') + (R.larga ? 'larga' : ''));
+    ops.appendChild(b);
+  }
+  caja.querySelector('.escena').onclick = () => { toque(); decirPregunta(); };
+  luego(250, decirPregunta);
+}
+
+function rondaOrden(R, puntos, siguiente) {
+  const caja = document.createElement('div'); caja.className = 'orden';
+  caja.innerHTML = `${puntos}<h2>${rotChico(R.rutina)}</h2>
+    <div class="huecos">${R.pasos.map((_, k) => `<div class="hueco"><b>${k + 1}</b></div>`).join('')}</div><div class="filas-orden"></div>`;
+  const filas = caja.querySelector('.filas-orden'), huecos = caja.querySelectorAll('.hueco');
+  vista.appendChild(caja);
+  let toca = 0, fallos = 0;
+  const botones = [];
+  for (const k of revolver([0, 1, 2])) {
+    const [e, es, en] = R.pasos[k], b = document.createElement('button');
+    b.className = 'paso-btn'; b.style.setProperty('--c', '#fff');
+    b.innerHTML = `<span class="e">${e}</span><span>${rot({ es, en })}</span>`;
+    b.onclick = () => {
+      if (k === toca) {
+        tono(PENTA[4 + toca], 0.4, 0.05);
+        huecos[toca].innerHTML += e; huecos[toca].classList.add('lleno');
+        b.classList.add('usado'); b.classList.remove('pista');
+        toca++; fallos = 0;
+        if (toca === 3) { festejar(4); hablar([azar(BIEN), { es: R.pasos.map(p => p[1]).join(' '), en: R.pasos.map(p => p[2]).join(' ') }], () => luego(600, siguiente)); }
+        else hablar({ es, en });
+      } else {
+        fallos++; tono(330, 0.3, 0.03);
+        b.classList.remove('mueve'); void b.offsetWidth; b.classList.add('mueve');
+        hablar(toca ? { es: '¿Qué sigue?', en: 'What comes next?' } : { es: '¿Qué va antes?', en: 'What comes before?' });
+        if (fallos >= 2) botones.find(x => x.k === toca).b.classList.add('pista');
+      }
+    };
+    botones.push({ k, b }); filas.appendChild(b);
+  }
+  luego(250, () => hablar([{ es: `${R.rutina.es}. ¿Qué va primero?`, en: `${R.rutina.en}. What comes first?` }]));
+}
+
+function memoria() {
+  const n = Math.min(6, Math.max(3, E.memNivel));
+  const cartas = revolver(revolver(PARES).slice(0, n).flatMap(p => [p, p]));
+  const mesa = document.createElement('div'); mesa.className = 'mesa';
+  vista.appendChild(mesa);
+  let abiertas = [], pares = 0, ocupado = false;
+  for (const p of cartas) {
+    const b = document.createElement('button'); b.className = 'mem';
+    b.innerHTML = `<span>${p[0]}</span>`;
+    b.onclick = () => {
+      if (ocupado || b.classList.contains('abierta') || b.classList.contains('par')) return;
+      toque(); b.classList.add('abierta'); abiertas.push({ b, p });
+      hablar({ es: p[1], en: p[2] });
+      if (abiertas.length < 2) return;
+      const [a1, a2] = abiertas; abiertas = [];
+      if (a1.p === a2.p) {
+        a1.b.classList.replace('abierta', 'par'); a2.b.classList.replace('abierta', 'par');
+        pares++; tono(784, 0.4, 0.05); tono(988, 0.5, 0.04, 0.12);
+        if (pares === n) luego(900, () => finJuego('memoria'));
+      } else {
+        ocupado = true;
+        luego(1300, () => { a1.b.classList.remove('abierta'); a2.b.classList.remove('abierta'); ocupado = false; });
+      }
+    };
+    mesa.appendChild(b);
+  }
+  acomodar(mesa, cartas.length);
+  luego(250, () => hablar({ es: 'Encuentra las parejas iguales.', en: 'Find the matching pairs.' }));
+}
+
+function finJuego(id) {
+  festejar(8); ganarEstrella();
+  const masDificil = id === 'memoria' && E.memNivel < 6;
+  vista.innerHTML = `<div class="centro"><div style="font-size:110px">🏆</div><div>${rot({ es: '¡Jugaste muy bien!', en: 'You played so well!' })}</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button class="boton" id="otra">🔁 ${tx({ es: 'Otra vez', en: 'Again' }, lenguas()[0])}</button>
+      ${masDificil ? `<button class="boton azul" id="mas">➕ ${tx({ es: 'Más cartas', en: 'More cards' }, lenguas()[0])}</button>` : ''}
+      <button class="boton verde" id="juegos">🎮 ${tx({ es: 'Más juegos', en: 'More games' }, lenguas()[0])}</button></div></div>`;
+  hablar({ es: '¡Jugaste muy bien! Ganaste una estrella.', en: 'You played so well! You earned a star.' });
+  vista.querySelector('#otra').onclick = () => { toque(); ir('juego', { id }); };
+  vista.querySelector('#juegos').onclick = () => { toque(); ir('juegos'); };
+  if (masDificil) vista.querySelector('#mas').onclick = () => { toque(); E.memNivel++; guardar('memNivel'); ir('juego', { id }); };
+}
 
 // ---------- Hablo (frases con dibujos) ----------
 let frase = [], catActual = 'comer';
