@@ -1,0 +1,1158 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f3ec">
+<title>Mi Día · My Day</title>
+<style>
+  :root { --bg: #f7f3ec; --fg: #2f3640; --muted: #7b8190; --linea: #00000012; --carta: #ffffff; --sombra: #00000018; }
+  body.oscuro { --bg: #1f3352; --fg: #eef2fa; --muted: #a9b6cc; --linea: #ffffff1c; --carta: #2b4268; --sombra: #00000040; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--fg); font-family: "Nunito", "Segoe UI", system-ui, sans-serif; overflow: hidden; transition: background .8s, color .8s; }
+  body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; }
+
+  /* Barra de arriba */
+  #barra { position: fixed; top: 0; left: 0; right: 0; height: 60px; display: grid; grid-template-columns: 60px 1fr 60px; align-items: center; padding: 0 10px; padding-top: env(safe-area-inset-top); z-index: 5; }
+  #barra h1 { text-align: center; font-size: 19px; font-weight: 800; line-height: 1.1; }
+  #barra h1 small { display: block; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .redondo { width: 48px; height: 48px; border-radius: 50%; background: var(--carta); box-shadow: 0 3px 0 var(--sombra); font-size: 24px; display: grid; place-items: center; }
+  .redondo:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--sombra); }
+  #volver[hidden] { visibility: hidden; display: grid; }
+  #candado { justify-self: end; font-size: 18px; width: 40px; height: 40px; opacity: .7; }
+  #candado.cargando { animation: llenar 3s linear forwards; }
+  @keyframes llenar { from { box-shadow: inset 0 0 0 0 #0003; } to { box-shadow: inset 0 0 0 24px #0003; } }
+
+  #vista { position: fixed; left: 0; right: 0; top: 60px; bottom: 0; padding: 8px 16px max(16px, env(safe-area-inset-bottom)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Tarjetas grandes: el dibujo y el texto crecen con la tarjeta */
+  .carta { border-radius: 28px; background: var(--c, var(--carta)); color: #2f3640; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3%; box-shadow: 0 5px 0 var(--sombra); container-type: size; overflow: hidden; padding: 4%; text-align: center; min-height: 0; }
+  .carta:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--sombra); }
+  .carta .emo { font-size: min(46cqh, 52cqw); line-height: 1.05; }
+  .carta .es { font-size: min(12cqh, 12cqw); font-weight: 800; line-height: 1.1; }
+  .carta .en { font-size: min(8.5cqh, 9cqw); font-weight: 600; opacity: .65; line-height: 1.1; }
+  .carta.sola .es { font-size: min(13cqh, 13cqw); }
+  .rejilla { display: grid; gap: 14px; height: 100%; }
+  .salta { animation: salto .5s; }
+  @keyframes salto { 35% { transform: scale(1.05); } 70% { transform: scale(.98); } }
+
+  /* Botones de texto */
+  .boton { border-radius: 999px; background: var(--carta); box-shadow: 0 3px 0 var(--sombra); padding: 12px 20px; font-size: 18px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+  .boton:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--sombra); }
+  .boton.verde { background: #bfe8c9; color: #24402c; }
+  .boton.azul { background: #c9defa; color: #233650; }
+  .boton small { font-weight: 600; opacity: .65; font-size: .8em; }
+
+  /* Inicio */
+  .hola { text-align: center; font-size: 15px; color: var(--muted); margin: 0 0 10px; }
+  .estrellas { position: fixed; bottom: max(10px, env(safe-area-inset-bottom)); left: 16px; font-size: 15px; font-weight: 800; color: var(--muted); }
+
+  /* Mi día */
+  .agenda { display: grid; grid-template-rows: minmax(0, 1fr) auto auto auto; gap: 12px; height: 100%; }
+  .ahora-despues { display: grid; grid-template-columns: 3fr 2fr; gap: 12px; min-height: 0; }
+  .marco { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 6px; min-height: 0; }
+  .marco > b { font-size: 15px; color: var(--muted); text-align: center; letter-spacing: .04em; }
+  .despues .carta { opacity: .8; }
+  .acciones { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .tira { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; scroll-snap-type: x proximity; }
+  .tira .mini { flex: none; width: 74px; height: 82px; border-radius: 18px; background: var(--c); box-shadow: 0 3px 0 var(--sombra); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #2f3640; position: relative; scroll-snap-align: center; padding: 2px; text-align: center; line-height: 1.05; }
+  .tira .mini .e { font-size: 32px; line-height: 1.1; }
+  .tira .mini.hecho { opacity: .35; }
+  .tira .mini.hecho::after { content: "✓"; position: absolute; top: 2px; right: 6px; font-size: 20px; color: #2c7a43; }
+  .tira .mini.ahora { outline: 4px solid #6aa7e8; outline-offset: 1px; }
+  .rutinas { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; color: var(--muted); font-size: 14px; font-weight: 700; }
+  .rutinas button { font-size: 26px; width: 50px; height: 50px; border-radius: 16px; background: var(--carta); box-shadow: 0 3px 0 var(--sombra); }
+  .fin-dia { display: grid; place-items: center; text-align: center; gap: 8px; font-size: 22px; font-weight: 800; }
+  .fin-dia .emo { font-size: 90px; }
+
+  /* Pasos de una rutina e historias */
+  .pasos { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; height: 100%; }
+  .puntos { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .puntos i { width: 14px; height: 14px; border-radius: 50%; background: var(--linea); box-shadow: inset 0 0 0 2px #0000001a; }
+  .puntos i.si { background: #6aa7e8; box-shadow: none; }
+  .escena { border-radius: 28px; background: var(--carta); box-shadow: 0 5px 0 var(--sombra); display: grid; grid-template-rows: minmax(0, 1fr) auto; place-items: center; padding: 16px; text-align: center; container-type: size; min-height: 0; }
+  .escena .emo { font-size: min(34cqh, 30cqw); line-height: 1.1; letter-spacing: .05em; }
+  .escena .es { font-size: clamp(20px, min(6.5cqh, 5.5cqw), 40px); font-weight: 800; line-height: 1.25; }
+  .escena .en { font-size: clamp(15px, min(4.6cqh, 4cqw), 28px); font-weight: 600; color: var(--muted); line-height: 1.25; margin-top: 6px; }
+  .flechas { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+  .flechas .redondo { width: 64px; height: 64px; font-size: 30px; }
+
+  /* Espera */
+  .espera { display: grid; place-items: center; gap: 16px; height: 100%; align-content: center; }
+  .espera svg { width: min(70vw, 52vh); height: min(70vw, 52vh); }
+  .opciones { display: grid; grid-template-columns: repeat(2, minmax(120px, 200px)); gap: 14px; }
+  .opciones .carta { height: 120px; }
+
+  /* Calma */
+  body.oscuro .carta { color: #2f3640; }
+  .globo { width: min(62vw, 46vh); height: min(62vw, 46vh); border-radius: 50%; background: radial-gradient(circle at 35% 30%, #cfe3ff, #7fa8e0 70%); box-shadow: 0 0 60px #9cc0f080; transform: scale(.45); will-change: transform; }
+  .centro { display: grid; place-items: center; gap: 18px; height: 100%; align-content: center; text-align: center; }
+  .centro > div > .es { font-size: 30px; font-weight: 800; }
+  .centro > div > .en { font-size: 20px; font-weight: 600; color: var(--muted); }
+  .burbujas { position: absolute; inset: 0; overflow: hidden; }
+  .burbuja { position: absolute; bottom: -140px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffffffd0, #b9d7ff55 45%, #8fb6ee30 70%); box-shadow: inset 0 0 12px #ffffff80, 0 0 10px #9cc0f040; animation: subir linear forwards; }
+  @keyframes subir { to { transform: translate(var(--dx), calc(-100vh - 200px)); } }
+  .burbuja.pum { animation: pum .25s ease-out forwards; }
+  @keyframes pum { to { transform: var(--t) scale(1.5); opacity: 0; } }
+  .manchas { position: absolute; inset: 0; overflow: hidden; filter: blur(40px); opacity: .8; }
+  .manchas i { position: absolute; width: 55vmax; height: 55vmax; border-radius: 50%; animation: flotar 24s ease-in-out infinite alternate; }
+  .manchas i:nth-child(1) { background: #5b7fc4; left: -20vmax; top: -10vmax; }
+  .manchas i:nth-child(2) { background: #7a5bb8; right: -25vmax; top: 20vh; animation-duration: 31s; }
+  .manchas i:nth-child(3) { background: #3f8f9a; left: 10vw; bottom: -30vmax; animation-duration: 27s; }
+  @keyframes flotar { to { transform: translate(12vmax, -8vmax) scale(1.2); } }
+  .sobre { position: relative; z-index: 1; }
+  .manos { display: flex; gap: 40px; font-size: 90px; }
+  .manos span { transition: transform .25s, opacity .25s; opacity: .45; }
+  .manos span.toca { transform: scale(1.25); opacity: 1; }
+  .conteo { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .conteo i { width: 56px; height: 56px; border-radius: 50%; background: #ffffff14; box-shadow: inset 0 0 0 2px #ffffff30; display: grid; place-items: center; font-style: normal; font-size: 24px; font-weight: 800; }
+  .conteo i.si { background: #f2d27a; color: #3b3220; box-shadow: none; animation: salto .5s; }
+  .frases { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 14px; }
+
+  /* Emociones */
+  .sentir-detalle { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; justify-items: center; text-align: center; }
+  .sentir-detalle .cara { font-size: min(30vw, 22vh); line-height: 1; }
+  .dice .es, .dice .en, .resp .es, .resp .en, .centro > div > .es, .centro > div > .en, .escena .es, .escena .en { display: block; }
+  .dice .es { font-size: 28px; font-weight: 800; }
+  .dice .en, .resp .en { font-size: 19px; font-weight: 600; color: var(--muted); }
+  .sentir-detalle .resp { background: var(--carta); border-radius: 22px; padding: 14px 18px; box-shadow: 0 3px 0 var(--sombra); max-width: 640px; }
+  .resp .es { font-size: 21px; font-weight: 700; }
+  .resp .en { font-size: 16px; }
+  .ayudas { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; width: 100%; max-width: 760px; }
+  .ayudas .carta { height: 120px; }
+  h2.sub { font-size: 18px; text-align: center; margin: 6px 0 2px; }
+  h2.sub small { display: block; font-size: 14px; color: var(--muted); font-weight: 600; }
+
+  /* Historias (lista) */
+  .lista-hist { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+  .lista-hist .carta { height: 170px; position: relative; }
+  .lista-hist .carta.leida::after { content: "⭐"; position: absolute; top: 8px; right: 12px; font-size: 20px; }
+
+  /* Hablo */
+  .hablo { display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 10px; height: 100%; }
+  .tira-frase { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: stretch; background: var(--carta); border-radius: 22px; padding: 8px; box-shadow: 0 3px 0 var(--sombra); min-height: 96px; }
+  .tira-frase .piezas { display: flex; gap: 6px; overflow-x: auto; align-items: center; }
+  .tira-frase .piezas:empty::before { content: "Toca los dibujos · Tap the pictures"; color: var(--muted); font-size: 15px; padding-left: 8px; }
+  .pieza { flex: none; min-width: 72px; height: 78px; border-radius: 14px; background: var(--c, #eee); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; padding: 0 6px; color: #2f3640; }
+  .pieza .e { font-size: 30px; line-height: 1.1; }
+  .tira-frase .redondo { width: 64px; height: auto; border-radius: 16px; font-size: 28px; }
+  .tira-frase .decir { background: #bfe8c9; }
+  .fila-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .inicio-frase { flex: none; border-radius: 16px; background: var(--c); box-shadow: 0 3px 0 var(--sombra); padding: 8px 12px; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px; color: #2f3640; }
+  .inicio-frase small { font-weight: 600; opacity: .65; font-size: 12px; }
+  .pestana { flex: none; border-radius: 999px; padding: 8px 14px; font-size: 15px; font-weight: 800; background: var(--carta); box-shadow: 0 2px 0 var(--sombra); }
+  .pestana.si { background: #2f3640; color: #fff; }
+  .palabras { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); grid-auto-rows: 118px; gap: 10px; overflow-y: auto; padding-bottom: 8px; }
+
+  /* Festejo suave */
+  .estrellita { position: fixed; font-size: 34px; pointer-events: none; z-index: 20; animation: elevar 2.2s ease-out forwards; }
+  @keyframes elevar { 0% { opacity: 0; transform: translateY(20px) scale(.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-38vh) scale(1.1); } }
+
+  /* Panel para adultos */
+  #panel { position: fixed; inset: 0; background: #f7f3ec; color: #2f3640; display: none; flex-direction: column; z-index: 30; }
+  #panel.abierto { display: flex; }
+  #panel header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); border-bottom: 1px solid #00000014; }
+  #panel header h2 { font-size: 18px; }
+  #panel .cuerpo { overflow-y: auto; padding: 8px 16px 40px; -webkit-overflow-scrolling: touch; max-width: 760px; width: 100%; margin: 0 auto; }
+  #panel h3 { font-size: 16px; margin: 20px 0 6px; }
+  #panel p { color: #6b7180; font-size: 14px; line-height: 1.45; margin: 4px 0 8px; }
+  #panel .opcion { display: flex; align-items: center; gap: 10px; font-size: 15px; padding: 6px 0; }
+  #panel .opcion input { width: 22px; height: 22px; flex: none; }
+  #panel .chico { font-size: 14px; padding: 8px 14px; font-weight: 700; }
+  .lista-agenda { display: grid; gap: 6px; }
+  .lista-agenda .fila { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; background: #fff; border-radius: 14px; padding: 6px 8px; }
+  .lista-agenda .fila .e { font-size: 28px; text-align: center; }
+  .lista-agenda .fila .b { display: flex; gap: 4px; }
+  .lista-agenda .fila .b button { width: 38px; height: 38px; border-radius: 10px; background: #f1ede6; font-size: 16px; }
+  .biblioteca { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 6px; }
+  .biblioteca button { background: #fff; border-radius: 12px; padding: 6px 4px; font-size: 12px; font-weight: 700; display: flex; flex-direction: column; align-items: center; }
+  .biblioteca button span { font-size: 26px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
+    .burbuja { animation-duration: 12s !important; }
+  }
+</style>
+</head>
+<body>
+<div id="barra">
+  <button id="volver" class="redondo" title="Volver">🏠</button>
+  <h1 id="titulo"></h1>
+  <button id="candado" class="redondo" title="Mantén presionado 3 segundos para los ajustes de adultos">🔒</button>
+</div>
+<main id="vista"></main>
+
+<div id="panel">
+  <header><h2>⚙️ Para adultos</h2><button id="cerrar" class="boton verde chico">Listo 🔒</button></header>
+  <div class="cuerpo" id="cuerpoPanel"></div>
+</div>
+
+<script>
+// =====================================================================
+//  DATOS
+// =====================================================================
+
+// Actividades de la agenda. r = rutina paso a paso que se abre desde la agenda
+const ACT = {
+  despertar: { e: '🌅', c: '#ffe3b8', es: 'Despertar', en: 'Wake up' },
+  bano:      { e: '🚽', c: '#cdeccf', es: 'Ir al baño', en: 'Potty', r: 'bano' },
+  manos:     { e: '🧼', c: '#cfe6f7', es: 'Lavar manos', en: 'Wash hands', r: 'manos' },
+  dientes:   { e: '🪥', c: '#d8f0f0', es: 'Lavar dientes', en: 'Brush teeth', r: 'dientes' },
+  vestir:    { e: '👕', c: '#d9dcfb', es: 'Vestirme', en: 'Get dressed', r: 'vestir' },
+  desayuno:  { e: '🥣', c: '#ffe8c7', es: 'Desayunar', en: 'Breakfast' },
+  comida:    { e: '🍽️', c: '#ffdcc2', es: 'Comer', en: 'Lunch' },
+  merienda:  { e: '🍎', c: '#ffd5d0', es: 'Merienda', en: 'Snack' },
+  cena:      { e: '🍲', c: '#f6d8c4', es: 'Cenar', en: 'Dinner' },
+  escuela:   { e: '🏫', c: '#f4e3a8', es: 'Escuela', en: 'School' },
+  tarea:     { e: '✏️', c: '#f1e8c4', es: 'Tarea', en: 'Homework' },
+  terapia:   { e: '🧩', c: '#d4ecf7', es: 'Terapia', en: 'Therapy' },
+  jugar:     { e: '🧸', c: '#f9e2b0', es: 'Jugar', en: 'Play' },
+  parque:    { e: '🛝', c: '#cfedc4', es: 'Parque', en: 'Park' },
+  tableta:   { e: '📱', c: '#dfe1ea', es: 'Tableta', en: 'Tablet' },
+  leer:      { e: '📚', c: '#ead9f5', es: 'Leer', en: 'Read' },
+  musica:    { e: '🎵', c: '#e6d6f7', es: 'Música', en: 'Music' },
+  iglesia:   { e: '⛪', c: '#e9e1f5', es: 'Iglesia', en: 'Church' },
+  orar:      { e: '🙏', c: '#f6e7d0', es: 'Orar', en: 'Pray' },
+  coche:     { e: '🚗', c: '#dbe5f0', es: 'Ir en el coche', en: 'Car ride' },
+  tienda:    { e: '🛒', c: '#e4efd2', es: 'Tienda', en: 'Store' },
+  doctor:    { e: '🩺', c: '#d6eef0', es: 'Doctor', en: 'Doctor' },
+  familia:   { e: '👵', c: '#f5dbe3', es: 'Ver a la familia', en: 'Visit family' },
+  descanso:  { e: '🌙', c: '#d4dcef', es: 'Descanso', en: 'Break', r: 'calma' },
+  banarse:   { e: '🛁', c: '#cde6f5', es: 'Bañarme', en: 'Bath', r: 'banarse' },
+  pijama:    { e: '🌛', c: '#d9d6f2', es: 'Pijama', en: 'Pajamas' },
+  dormir:    { e: '😴', c: '#d0d3f0', es: 'Dormir', en: 'Sleep', r: 'dormir' },
+};
+const AGENDA_INICIAL = ['despertar', 'bano', 'vestir', 'desayuno', 'escuela', 'comida', 'jugar', 'banarse', 'dormir'];
+
+// Rutinas paso a paso: [dibujo, español, inglés]
+const RUTINAS = {
+  bano: { e: '🚽', es: 'Ir al baño', en: 'Going potty', pasos: [
+    ['🚽', 'Siento ganas: voy al baño.', 'I need to go: I go to the bathroom.'],
+    ['👖', 'Bajo mi ropa.', 'I pull down my clothes.'],
+    ['🚽', 'Me siento en el baño.', 'I sit on the toilet.'],
+    ['💧', 'Hago pipí o popó. ¡Sin prisa!', 'I pee or poop. No rush!'],
+    ['🧻', 'Me limpio con papel.', 'I wipe with toilet paper.'],
+    ['💦', 'Le jalo al baño.', 'I flush the toilet.'],
+    ['👖', 'Subo mi ropa.', 'I pull up my clothes.'],
+    ['🧼', 'Me lavo las manos. ¡Lo hice!', 'I wash my hands. I did it!'],
+  ]},
+  manos: { e: '🧼', es: 'Lavar las manos', en: 'Washing hands', pasos: [
+    ['🚰', 'Abro la llave.', 'I turn on the water.'],
+    ['💧', 'Mojo mis manos.', 'I get my hands wet.'],
+    ['🧼', 'Pongo jabón.', 'I put on soap.'],
+    ['🫧', 'Froto, froto, mientras cuento hasta diez.', 'I rub, rub, while I count to ten.'],
+    ['💦', 'Enjuago el jabón.', 'I rinse off the soap.'],
+    ['🚰', 'Cierro la llave.', 'I turn off the water.'],
+    ['🙌', 'Me seco las manos. ¡Manos limpias!', 'I dry my hands. Clean hands!'],
+  ]},
+  dientes: { e: '🪥', es: 'Lavar los dientes', en: 'Brushing teeth', pasos: [
+    ['🪥', 'Pongo un poquito de pasta.', 'I put a little toothpaste on my brush.'],
+    ['😁', 'Cepillo los dientes de arriba.', 'I brush my top teeth.'],
+    ['😬', 'Cepillo los dientes de abajo.', 'I brush my bottom teeth.'],
+    ['👅', 'Cepillo adentro y afuera, despacito.', 'I brush inside and outside, gently.'],
+    ['💦', 'Escupo la pasta.', 'I spit out the toothpaste.'],
+    ['🥤', 'Me enjuago la boca.', 'I rinse my mouth.'],
+    ['✨', '¡Dientes limpios!', 'Clean teeth!'],
+  ]},
+  vestir: { e: '👕', es: 'Vestirme', en: 'Getting dressed', pasos: [
+    ['🩲', 'Me pongo la ropa interior.', 'I put on my underwear.'],
+    ['👖', 'Me pongo el pantalón: una pierna, luego la otra.', 'I put on my pants: one leg, then the other.'],
+    ['👕', 'Me pongo la camisa: primero la cabeza, luego los brazos.', 'I put on my shirt: head first, then my arms.'],
+    ['🧦', 'Me pongo los calcetines.', 'I put on my socks.'],
+    ['👟', 'Me pongo los zapatos, cada uno en su pie.', 'I put on my shoes, each one on its own foot.'],
+    ['🪞', 'Me veo en el espejo. ¡List{o}!', 'I look in the mirror. All ready!'],
+  ]},
+  banarse: { e: '🛁', es: 'Bañarme', en: 'Bath time', pasos: [
+    ['👕', 'Me quito la ropa.', 'I take off my clothes.'],
+    ['🛁', 'Entro a la tina con un adulto.', 'I get in the bath with a grown-up.'],
+    ['💧', 'Me mojo todo el cuerpo.', 'I get my whole body wet.'],
+    ['🧴', 'Champú en el pelo. Cierro los ojos.', 'Shampoo in my hair. I close my eyes.'],
+    ['🧼', 'Jabón en el cuerpo.', 'Soap on my body.'],
+    ['🚿', 'Me enjuago.', 'I rinse off.'],
+    ['🤗', 'Me seco con la toalla.', 'I dry off with a towel.'],
+    ['🌛', 'Me pongo la pijama.', 'I put on my pajamas.'],
+  ]},
+  dormir: { e: '😴', es: 'Hora de dormir', en: 'Bedtime', pasos: [
+    ['🌛', 'Me pongo la pijama.', 'I put on my pajamas.'],
+    ['🪥', 'Me lavo los dientes.', 'I brush my teeth.'],
+    ['🚽', 'Voy al baño.', 'I go potty.'],
+    ['📖', 'Leemos un cuento.', 'We read a story.'],
+    ['🙏', 'Oro: "Gracias, Dios, por este día."', 'I pray: "Thank you, God, for this day."'],
+    ['🤗', 'Abrazo y beso de buenas noches.', 'A good-night hug and kiss.'],
+    ['💡', 'Apagamos la luz.', 'We turn off the light.'],
+    ['😴', 'A dormir. ¡Buenas noches!', 'Time to sleep. Good night!'],
+  ]},
+};
+
+// Emociones. {o} cambia a "o" o "a" según el ajuste niño/niña
+const EMOCIONES = [
+  { id: 'feliz',    e: '😊', c: '#ffe7a8', es: 'Feliz', en: 'Happy', di: { es: 'Estoy feliz.', en: 'I feel happy.' },
+    resp: { es: '¡Qué bonito! Puedes compartir tu alegría con alguien.', en: 'How wonderful! You can share your joy with someone.' } },
+  { id: 'triste',   e: '😢', c: '#c9dcf5', es: 'Triste', en: 'Sad', di: { es: 'Estoy triste.', en: 'I feel sad.' },
+    resp: { es: 'Está bien estar triste. Un abrazo puede ayudar.', en: 'It is okay to feel sad. A hug can help.' } },
+  { id: 'enojo',    e: '😠', c: '#f7c6bd', es: 'Enojad{o}', en: 'Angry', di: { es: 'Estoy enojad{o}.', en: 'I feel angry.' },
+    resp: { es: 'Está bien sentir enojo. Vamos a respirar despacio.', en: "It is okay to feel angry. Let's breathe slowly." } },
+  { id: 'miedo',    e: '😨', c: '#d9d2f2', es: 'Con miedo', en: 'Scared', di: { es: 'Tengo miedo.', en: 'I feel scared.' },
+    resp: { es: 'Dios está contigo. Un adulto te puede ayudar.', en: 'God is with you. A grown-up can help you.' } },
+  { id: 'nervios',  e: '😟', c: '#f3dcc0', es: 'Nervios{o}', en: 'Worried', di: { es: 'Estoy nervios{o}.', en: 'I feel worried.' },
+    resp: { es: 'Respiremos juntos, despacito.', en: "Let's breathe together, nice and slow." } },
+  { id: 'demasiado',e: '🙉', c: '#e8d3e6', es: 'Es demasiado', en: 'Too much', di: { es: 'Hay mucho ruido. Es demasiado para mí.', en: 'It is too loud. It is too much for me.' },
+    resp: { es: 'Puedes taparte los oídos o ir a un lugar tranquilo.', en: 'You can cover your ears or go to a quiet place.' } },
+  { id: 'cansado',  e: '🥱', c: '#d6d9ef', es: 'Cansad{o}', en: 'Tired', di: { es: 'Estoy cansad{o}.', en: 'I feel tired.' },
+    resp: { es: 'Tu cuerpo necesita descansar.', en: 'Your body needs some rest.' } },
+  { id: 'duele',    e: '🤕', c: '#f6cfd6', es: 'Me duele', en: 'It hurts', di: { es: 'Algo me duele.', en: 'Something hurts.' },
+    resp: { es: 'Avísale a un adulto y enséñale dónde te duele.', en: 'Tell a grown-up and show them where it hurts.' } },
+  { id: 'calma',    e: '😌', c: '#cdebd6', es: 'Tranquil{o}', en: 'Calm', di: { es: 'Estoy tranquil{o}.', en: 'I feel calm.' },
+    resp: { es: '¡Qué bien! Así se siente la calma.', en: 'Great! This is how calm feels.' } },
+];
+
+// Herramientas del rincón de calma
+const CALMA = [
+  { id: 'respirar', e: '🎈', c: '#cfe0fa', es: 'Respirar', en: 'Breathe' },
+  { id: 'burbujas', e: '🫧', c: '#d4eef5', es: 'Burbujas', en: 'Bubbles' },
+  { id: 'musica',   e: '🎶', c: '#e2d6f5', es: 'Música suave', en: 'Soft music' },
+  { id: 'mariposa', e: '🦋', c: '#f5d9e6', es: 'Abrazo de mariposa', en: 'Butterfly hug' },
+  { id: 'contar',   e: '🔢', c: '#f6e6bf', es: 'Contar despacio', en: 'Slow counting' },
+  { id: 'orar',     e: '🙏', c: '#f4e2cf', es: 'Orar', en: 'Pray' },
+];
+const PEDIR = [
+  { e: '🤗', es: 'Quiero un abrazo, por favor.', en: 'I want a hug, please.', b: { es: 'Abrazo', en: 'Hug' } },
+  { e: '🙋', es: 'Necesito ayuda, por favor.', en: 'I need help, please.', b: { es: 'Ayuda', en: 'Help' } },
+  { e: '🤫', es: 'Necesito silencio, por favor.', en: 'I need quiet, please.', b: { es: 'Silencio', en: 'Quiet' } },
+  { e: '🛋️', es: 'Necesito un descanso.', en: 'I need a break.', b: { es: 'Descanso', en: 'Break' } },
+];
+
+// Historias sociales: [escena, español, inglés]
+const HISTORIAS = [
+  { id: 'doctor', e: '🩺', c: '#d6eef0', es: 'Voy al doctor', en: 'Going to the doctor', p: [
+    ['🚗🏥', 'Hoy voy al doctor. El doctor ayuda a que mi cuerpo esté sano.', 'Today I am going to the doctor. The doctor helps keep my body healthy.'],
+    ['🪑📖', 'Primero esperamos en la sala. Puedo jugar o mirar un libro mientras espero.', 'First we wait in the waiting room. I can play or look at a book while I wait.'],
+    ['⚖️📏', 'Me pesan y me miden. Es rápido y no duele.', 'They weigh me and measure me. It is quick and it does not hurt.'],
+    ['🩺💓', 'El doctor escucha mi corazón. El aparato se siente frío, ¡y está bien!', 'The doctor listens to my heart. The tool feels cold, and that is okay!'],
+    ['👂👄', 'También puede mirar mis oídos y mi boca. Puedo decir "aaah".', 'The doctor may look in my ears and my mouth. I can say "aaah".'],
+    ['🤝🎈', 'Si tengo miedo, puedo apretar la mano de mi adulto y respirar despacio.', 'If I feel scared, I can squeeze my grown-up\'s hand and breathe slowly.'],
+    ['⭐🏠', '¡Terminamos! Fui muy valiente. Dios cuida mi cuerpo.', 'All done! I was very brave. God takes care of my body.'],
+  ]},
+  { id: 'pelo', e: '✂️', c: '#f5dbe3', es: 'Me cortan el pelo', en: 'Getting a haircut', p: [
+    ['💇✂️', 'Hoy me van a cortar el pelo. El pelo crece, y cortarlo no duele.', 'Today I am getting a haircut. Hair grows, and cutting it does not hurt.'],
+    ['💺🧣', 'Me siento en una silla especial. Me ponen una capa para que el pelo no me pique.', 'I sit in a special chair. They put a cape on me so the hair does not itch.'],
+    ['✂️🔊', 'Las tijeras hacen "chic, chic". La máquina hace "bzzz". Son ruidos normales.', 'The scissors go "snip, snip". The clippers go "bzzz". Those are normal sounds.'],
+    ['🎧🧸', 'Si el ruido me molesta, puedo usar audífonos o abrazar mi juguete.', 'If the noise bothers me, I can wear headphones or hug my toy.'],
+    ['🔢🙂', 'Trato de quedarme quiet{o}. Puedo contar hasta diez.', 'I try to stay still. I can count to ten.'],
+    ['🪞✨', '¡Listo! Me veo en el espejo. ¡Qué bien me veo!', 'Done! I look in the mirror. I look great!'],
+  ]},
+  { id: 'molesta', e: '🛑', c: '#f7d3c8', es: 'Si alguien me molesta', en: 'If someone is mean to me', p: [
+    ['🧒😠', 'A veces otro niño me dice cosas feas o me empuja. Eso no está bien.', 'Sometimes another kid says mean things or pushes me. That is not okay.'],
+    ['✋🛑', 'Puedo decir fuerte: "¡Alto! No me gusta."', 'I can say loudly: "Stop! I don\'t like that."'],
+    ['🚶🌳', 'Puedo alejarme e ir a un lugar seguro.', 'I can walk away and go to a safe place.'],
+    ['🙋👩‍🏫', 'Le digo a un adulto: a mi maestra, a mamá o a papá. Avisar es lo correcto.', 'I tell a grown-up: my teacher, mom, or dad. Telling is the right thing to do.'],
+    ['💛🙏', 'No es mi culpa. Soy muy valios{o} y Dios me ama tal como soy.', 'It is not my fault. I am precious, and God loves me just as I am.'],
+    ['🤝😊', 'Hay personas buenas que me cuidan y quieren ser mis amigos.', 'There are kind people who take care of me and want to be my friends.'],
+  ]},
+  { id: 'amigo', e: '🤝', c: '#f9e2b0', es: 'Hacer un amigo', en: 'Making a friend', p: [
+    ['🧒🧒', 'Me gustaría jugar con otro niño.', 'I would like to play with another kid.'],
+    ['👋🙂', 'Me acerco y le digo: "Hola".', 'I walk over and say: "Hi".'],
+    ['❓🧸', 'Puedo preguntar: "¿Quieres jugar conmigo?"', 'I can ask: "Do you want to play with me?"'],
+    ['👍👎', 'A veces dice que sí. A veces dice que no. Las dos cosas están bien.', 'Sometimes they say yes. Sometimes they say no. Both are okay.'],
+    ['🔄⚽', 'Si jugamos, tomamos turnos y compartimos.', 'If we play, we take turns and share.'],
+    ['💛✨', 'Ser amable es una forma bonita de hacer amigos.', 'Being kind is a beautiful way to make friends.'],
+  ]},
+  { id: 'cambio', e: '🔄', c: '#d9dcfb', es: 'Cuando algo cambia', en: 'When plans change', p: [
+    ['📅🙂', 'Me gusta saber qué va a pasar. Mi agenda me ayuda.', 'I like to know what will happen. My schedule helps me.'],
+    ['🌧️🛝', 'A veces los planes cambian. Por ejemplo, llueve y no vamos al parque.', 'Sometimes plans change. For example, it rains and we do not go to the park.'],
+    ['😟💭', 'Cuando algo cambia, puedo sentirme nervios{o} o enojad{o}. Está bien sentirme así.', 'When something changes, I may feel worried or angry. It is okay to feel that way.'],
+    ['🎈🌬️', 'Puedo respirar despacio: inhalo… exhalo…', 'I can breathe slowly: in… and out…'],
+    ['📅✏️', 'Un adulto me enseña el nuevo plan. Ahora sé qué sigue.', 'A grown-up shows me the new plan. Now I know what comes next.'],
+    ['🙏💛', 'Aunque las cosas cambien, Dios siempre está conmigo.', 'Even when things change, God is always with me.'],
+  ]},
+  { id: 'ruido', e: '🎧', c: '#e8d3e6', es: 'Cuando hay mucho ruido', en: 'When it is too loud', p: [
+    ['🎉🔊', 'A veces hay mucho ruido, mucha luz o mucha gente.', 'Sometimes there is a lot of noise, bright lights, or lots of people.'],
+    ['🙉😖', 'Mi cuerpo puede sentir que es demasiado.', 'My body may feel like it is too much.'],
+    ['🎧🤲', 'Puedo taparme los oídos o ponerme mis audífonos.', 'I can cover my ears or put on my headphones.'],
+    ['🙋🗣️', 'Puedo decir: "Necesito un descanso".', 'I can say: "I need a break."'],
+    ['🌳🤫', 'Un adulto me lleva a un lugar más tranquilo.', 'A grown-up takes me to a quieter place.'],
+    ['😌🎈', 'Respiro despacio hasta sentirme mejor.', 'I breathe slowly until I feel better.'],
+  ]},
+  { id: 'escuela', e: '🏫', c: '#f4e3a8', es: 'Voy a la escuela', en: 'Going to school', p: [
+    ['🎒🏫', 'Por la mañana voy a la escuela.', 'In the morning I go to school.'],
+    ['👋💛', 'Me despido de mi familia. Más tarde nos volvemos a ver.', 'I say goodbye to my family. We will see each other again later.'],
+    ['👩‍🏫📚', 'Mi maestra me ayuda a aprender cosas nuevas.', 'My teacher helps me learn new things.'],
+    ['🙋✋', 'Si necesito algo, levanto la mano o pido ayuda.', 'If I need something, I raise my hand or ask for help.'],
+    ['🍎⚽', 'Hay tiempo para comer y tiempo para jugar.', 'There is time to eat and time to play.'],
+    ['🏠🤗', 'Al final del día regreso a casa. ¡Aprendí mucho!', 'At the end of the day, I go back home. I learned a lot!'],
+  ]},
+  { id: 'turno', e: '⏳', c: '#e4efd2', es: 'Esperar mi turno', en: 'Waiting for my turn', p: [
+    ['🛝🧒', 'A veces quiero algo, pero otra persona lo está usando.', 'Sometimes I want something, but someone else is using it.'],
+    ['⏳🙂', 'Espero mi turno. Esperar puede ser difícil, ¡y yo puedo hacerlo!', 'I wait for my turn. Waiting can be hard, and I can do it!'],
+    ['🔢🎈', 'Mientras espero, puedo contar o respirar despacio.', 'While I wait, I can count or breathe slowly.'],
+    ['🗣️❓', 'Puedo preguntar: "¿Me lo prestas cuando termines?"', 'I can ask: "Can I have a turn when you are done?"'],
+    ['☝️🎉', '¡Ahora es mi turno! Después le toca a alguien más.', 'Now it is my turn! Then it is someone else\'s turn.'],
+  ]},
+  { id: 'iglesia', e: '⛪', c: '#e9e1f5', es: 'Vamos a la iglesia', en: 'Going to church', p: [
+    ['👨‍👩‍👧⛪', 'El domingo vamos a la iglesia con la familia.', 'On Sunday we go to church with our family.'],
+    ['👋🙂', 'Saludamos a las personas. Puedo decir "hola" o saludar con la mano.', 'We greet people. I can say "hi" or wave.'],
+    ['🎵🙌', 'Cantamos canciones para Dios. Si la música está muy fuerte, puedo taparme los oídos.', 'We sing songs to God. If the music is too loud, I can cover my ears.'],
+    ['📖🤫', 'Escuchamos la Biblia. Puedo sentarme y escuchar, o jugar en silencio.', 'We listen to the Bible. I can sit and listen, or play quietly.'],
+    ['🙏💛', 'Oramos juntos. Dios escucha a los niños.', 'We pray together. God listens to children.'],
+    ['🏠😊', 'Después regresamos a casa.', 'Afterwards we go back home.'],
+  ]},
+  { id: 'ayuda', e: '🙋', c: '#ffd5d0', es: 'Pedir ayuda', en: 'Asking for help', p: [
+    ['🧩😣', 'A veces algo es difícil para mí.', 'Sometimes something is hard for me.'],
+    ['🙋🗣️', 'Puedo pedir ayuda. Digo: "Ayúdame, por favor."', 'I can ask for help. I say: "Help me, please."'],
+    ['📱👉', 'Si no tengo palabras, puedo usar mi tableta o señalar.', 'If I do not have words, I can use my tablet or point.'],
+    ['🤝😊', 'Un adulto me ayuda. Pedir ayuda es de valientes.', 'A grown-up helps me. Asking for help is brave.'],
+    ['💛✨', 'Todos necesitamos ayuda a veces.', 'Everyone needs help sometimes.'],
+  ]},
+];
+
+// Hablo: inicios de frase y palabras por categoría
+const INICIOS = [
+  { e: '🙋', c: '#cfe6f7', es: 'Yo quiero', en: 'I want' },
+  { e: '🙅', c: '#f6cfd6', es: 'No quiero', en: 'I don\'t want' },
+  { e: '❗', c: '#f4e3a8', es: 'Necesito', en: 'I need' },
+  { e: '💛', c: '#ffe7a8', es: 'Me siento', en: 'I feel' },
+  { e: '😍', c: '#f5d9e6', es: 'Me gusta', en: 'I like' },
+  { e: '🤕', c: '#f7d3c8', es: 'Me duele', en: 'It hurts:' },
+  { e: '👍', c: '#cdebd6', es: 'Sí', en: 'Yes' },
+  { e: '👎', c: '#f7c6bd', es: 'No', en: 'No' },
+  { e: '🙏', c: '#e9e1f5', es: 'por favor', en: 'please' },
+  { e: '💖', c: '#f5dbe3', es: 'gracias', en: 'thank you' },
+];
+const CATEGORIAS = [
+  { id: 'comer', e: '🍎', es: 'Comer y beber', en: 'Food & drinks', c: '#ffe3c9', w: [
+    ['💧','agua','water'],['🥛','leche','milk'],['🧃','jugo','juice'],['🍎','manzana','apple'],['🍌','plátano','banana'],
+    ['🍇','uvas','grapes'],['🍪','galleta','cookie'],['🍞','pan','bread'],['🌮','tacos','tacos'],['🍕','pizza','pizza'],
+    ['🍚','arroz','rice'],['🥚','huevo','egg'],['🧀','queso','cheese'],['🍲','sopa','soup'],['🍦','helado','ice cream'],['🍽️','comer','to eat']] },
+  { id: 'jugar', e: '🧸', es: 'Jugar', en: 'Play', c: '#f9e2b0', w: [
+    ['🧸','jugar','to play'],['⚽','la pelota','the ball'],['🧱','bloques','blocks'],['🎨','pintar','to paint'],['🎵','música','music'],
+    ['📱','la tableta','the tablet'],['📚','un libro','a book'],['🛝','columpio','the swing'],['🫧','burbujas','bubbles'],['🚗','carritos','toy cars'],
+    ['🧩','rompecabezas','a puzzle'],['📺','la tele','TV']] },
+  { id: 'lugares', e: '🏠', es: 'Lugares', en: 'Places', c: '#cfedc4', w: [
+    ['🏠','ir a casa','to go home'],['🚽','ir al baño','to go potty'],['🌳','salir afuera','to go outside'],['🛝','ir al parque','to go to the park'],
+    ['🛒','ir a la tienda','to go to the store'],['🏫','ir a la escuela','to go to school'],['⛪','ir a la iglesia','to go to church'],['🛏️','ir a la cama','to go to bed'],['🚗','ir en el coche','a car ride']] },
+  { id: 'personas', e: '👨‍👩‍👧', es: 'Personas', en: 'People', c: '#f5dbe3', w: [
+    ['👩','mamá','mom'],['👨','papá','dad'],['👦','mi hermano','my brother'],['👧','mi hermana','my sister'],['👵','abuela','grandma'],
+    ['👴','abuelo','grandpa'],['👩‍🏫','maestra','teacher'],['🧒','mi amigo','my friend'],['👶','el bebé','the baby'],['🙏','Dios','God']] },
+  { id: 'cuerpo', e: '🤕', es: 'Mi cuerpo', en: 'My body', c: '#f7d3c8', w: [
+    ['🤕','la cabeza','my head'],['🤢','la panza','my tummy'],['🦷','los dientes','my teeth'],['👂','el oído','my ear'],['👁️','el ojo','my eye'],
+    ['👃','la nariz','my nose'],['✋','la mano','my hand'],['🦵','la pierna','my leg'],['🦶','el pie','my foot'],['🗣️','la garganta','my throat']] },
+  { id: 'sentir', e: '😊', es: 'Sentimientos', en: 'Feelings', c: '#ffe7a8', w: [
+    ['😊','feliz','happy'],['😢','triste','sad'],['😠','enojad{o}','angry'],['😨','asustad{o}','scared'],['😟','nervios{o}','worried'],
+    ['🥱','cansad{o}','tired'],['😌','tranquil{o}','calm'],['🤒','enferm{o}','sick'],['🙉','con mucho ruido','it is too loud'],['🥰','con amor','loved']] },
+  { id: 'acciones', e: '✋', es: 'Acciones', en: 'Actions', c: '#d9dcfb', w: [
+    ['➕','más','more'],['✋','ya terminé','all done'],['🛑','alto','stop'],['🔁','otra vez','again'],['🙋','ayuda','help'],
+    ['📦','abrir','to open'],['👀','ver','to see'],['😴','dormir','to sleep'],['🤗','un abrazo','a hug'],['⏳','esperar','to wait'],['☝️','mi turno','my turn'],['🤫','silencio','quiet']] },
+];
+
+const NUM = {
+  es: ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez'],
+  en: ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'],
+};
+const PUERTAS = [
+  { id: 'agenda',    e: '📅', c: '#cfe6f7', es: 'Mi día', en: 'My day' },
+  { id: 'sentir',    e: '💛', c: '#ffe7a8', es: '¿Cómo me siento?', en: 'How do I feel?' },
+  { id: 'calma',     e: '🌙', c: '#d4dcef', es: 'Rincón de calma', en: 'Calm corner' },
+  { id: 'historias', e: '📖', c: '#f5dbe3', es: 'Historias', en: 'Stories' },
+  { id: 'hablo',     e: '🗣️', c: '#cdebd6', es: 'Hablo', en: 'I talk' },
+];
+
+// =====================================================================
+//  AJUSTES GUARDADOS (solo en este aparato)
+// =====================================================================
+function leer(k, def) { try { const v = localStorage.getItem('midia.' + k); return v === null ? def : JSON.parse(v); } catch { return def; } }
+function guardar(k) { try { localStorage.setItem('midia.' + k, JSON.stringify(E[k])); } catch {} }
+const E = {
+  idioma: leer('idioma', 'ambos'),          // es | en | ambos
+  genero: leer('genero', 'o'),              // o = niño, a = niña (para "cansado/cansada")
+  lento: leer('lento', true),               // voz despacio
+  sonidos: leer('sonidos', true),
+  puertas: leer('puertas', { agenda: true, sentir: true, calma: true, historias: true, hablo: true }),
+  agenda: leer('agenda', AGENDA_INICIAL).filter(id => ACT[id]),
+  dia: leer('dia', { fecha: '', i: 0 }),     // hasta dónde va la agenda de hoy
+  estrellas: leer('estrellas', 0),
+  leidas: leer('leidas', []),               // historias terminadas
+};
+function hoy() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
+function revisarDia() { if (E.dia.fecha !== hoy()) { E.dia = { fecha: hoy(), i: 0 }; guardar('dia'); } }
+function ganarEstrella() { E.estrellas++; guardar('estrellas'); }
+
+// =====================================================================
+//  TEXTO BILINGÜE Y VOZ
+// =====================================================================
+const lenguas = () => E.idioma === 'ambos' ? ['es', 'en'] : [E.idioma];
+const gen = s => (s || '').replaceAll('{o}', E.genero);
+const tx = (f, l) => gen(f[l]);
+// Etiqueta en pantalla: español grande + inglés chico (o solo uno)
+function rot(f) {
+  return lenguas().map((l, k) => `<span class="${k ? 'en' : 'es'}">${tx(f, l)}</span>`).join('');
+}
+// Igual, pero el segundo idioma va chiquito en la misma línea (para botones y subtítulos)
+function rotChico(f) {
+  const ls = lenguas();
+  return tx(f, ls[0]) + (ls[1] ? ` <small>${tx(f, ls[1])}</small>` : '');
+}
+
+let turno = 0;
+function callar() { turno++; if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+function vozDelAparato(l) {
+  const vs = speechSynthesis.getVoices(), pref = l === 'es' ? ['es-MX', 'es-US', 'es'] : ['en-US', 'en-GB', 'en'];
+  for (const x of pref) { const v = vs.find(v => v.lang.replace('_', '-').toLowerCase().startsWith(x.toLowerCase())); if (v) return v; }
+}
+function decirUno(s, l, luego) {
+  let hecho = false, tm = null;
+  const fin = () => { if (hecho) return; hecho = true; clearTimeout(tm); luego(); };
+  if (!('speechSynthesis' in window)) { tm = setTimeout(fin, 400); return; }
+  const u = new SpeechSynthesisUtterance(s);
+  u.lang = l === 'es' ? 'es-MX' : 'en-US'; u.rate = E.lento ? 0.8 : 0.95; u.pitch = 1.05;
+  const v = vozDelAparato(l); if (v) u.voice = v;
+  u.onend = u.onerror = fin;
+  tm = setTimeout(fin, 2000 + s.length * 110);   // por si el navegador no avisa que terminó
+  speechSynthesis.speak(u);
+}
+// Dice una o varias frases {es, en}: primero todo en español y luego en inglés (según el idioma elegido)
+function hablar(frases, alTerminar) {
+  callar();
+  const t = turno, partes = [];
+  for (const l of lenguas()) for (const f of [].concat(frases)) { const s = tx(f, l); if (s) partes.push([s, l]); }
+  const sig = i => {
+    if (t !== turno) return;
+    if (i >= partes.length) { alTerminar && alTerminar(); return; }
+    decirUno(partes[i][0], partes[i][1], () => setTimeout(() => sig(i + 1), 250));
+  };
+  sig(0);
+}
+if ('speechSynthesis' in window) speechSynthesis.getVoices();
+
+// =====================================================================
+//  SONIDOS SUAVES
+// =====================================================================
+let ac = null;
+function audio() {
+  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; } }
+  if (ac.state === 'suspended') ac.resume();
+  return ac;
+}
+function tono(f, dur = 0.25, vol = 0.06, cuando = 0, ataque = 0.02) {
+  if (!E.sonidos) return;
+  const a = audio(); if (!a) return;
+  const t = a.currentTime + cuando, o = a.createOscillator(), g = a.createGain();
+  o.type = 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vol, t + ataque);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + 0.05);
+}
+const toque = () => tono(660, 0.18, 0.04);
+function festejo() { [523, 659, 784, 1047].forEach((f, i) => tono(f, 0.6, 0.05, i * 0.13)); }
+function festejar(n = 6) {
+  festejo();
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('span');
+    s.className = 'estrellita'; s.textContent = ['⭐', '✨', '💛'][i % 3];
+    s.style.left = (30 + Math.random() * 40) + 'vw'; s.style.top = (45 + Math.random() * 20) + 'vh';
+    s.style.animationDelay = (i * 0.12) + 's';
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 2600 + i * 120);
+  }
+}
+const PENTA = [261.6, 293.7, 329.6, 392, 440, 523.3, 587.3, 659.3, 784, 880];
+
+// =====================================================================
+//  NAVEGACIÓN
+// =====================================================================
+const vista = document.getElementById('vista'), bVolver = document.getElementById('volver'), hTitulo = document.getElementById('titulo');
+let limpiar = [], volverA = null;
+function alSalir(fn) { limpiar.push(fn); }
+function cada(ms, fn) { const id = setInterval(fn, ms); alSalir(() => clearInterval(id)); return id; }
+function luego(ms, fn) { const id = setTimeout(fn, ms); alSalir(() => clearTimeout(id)); return id; }
+function cuadro(fn) { let id; const paso = t => { if (fn(t) !== false) id = requestAnimationFrame(paso); }; id = requestAnimationFrame(paso); alSalir(() => cancelAnimationFrame(id)); }
+
+function ir(p, arg) {
+  limpiar.forEach(f => f()); limpiar = [];
+  callar();
+  document.body.classList.toggle('oscuro', p === 'calma' || p === 'herramienta');
+  vista.innerHTML = ''; vista.scrollTop = 0; vista.style.overflowY = '';
+  volverA = null; hTitulo.onclick = null;
+  VISTAS[p](arg);
+  bVolver.hidden = p === 'inicio';
+  bVolver.textContent = volverA ? '◀' : '🏠';
+}
+function titulo(f) {
+  const ls = lenguas();
+  hTitulo.innerHTML = tx(f, ls[0]) + (ls[1] ? `<small>${tx(f, ls[1])}</small>` : '');
+}
+bVolver.onclick = () => { toque(); volverA ? volverA() : ir('inicio'); };
+
+// Tarjeta grande genérica
+function carta(o, alTocar, extra = '') {
+  const b = document.createElement('button');
+  b.className = 'carta ' + extra; b.style.setProperty('--c', o.c || '');
+  b.innerHTML = `<span class="emo">${o.e}</span>${rot(o)}`;
+  b.onclick = () => { b.classList.remove('salta'); void b.offsetWidth; b.classList.add('salta'); toque(); alTocar(b); };
+  return b;
+}
+// Acomoda n tarjetas para que queden lo más grandes posible
+function acomodar(cont, n) {
+  const ajustar = () => {
+    const w = cont.clientWidth, h = cont.clientHeight, gap = 14;
+    let cols = 1, mejor = 0;
+    for (let c = 1; c <= n; c++) {
+      const r = Math.ceil(n / c), t = Math.min((w - (c - 1) * gap) / c, (h - (r - 1) * gap) / r);
+      if (t > mejor) { mejor = t; cols = c; }
+    }
+    cont.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    cont.style.gridTemplateRows = `repeat(${Math.ceil(n / cols)}, 1fr)`;
+  };
+  ajustar();
+  addEventListener('resize', ajustar); alSalir(() => removeEventListener('resize', ajustar));
+}
+
+// =====================================================================
+//  PANTALLAS
+// =====================================================================
+const VISTAS = {};
+
+// ---------- Inicio ----------
+VISTAS.inicio = () => {
+  const h = new Date().getHours();
+  const saludo = h < 12 ? { es: '¡Buenos días!', en: 'Good morning!' } : h < 19 ? { es: '¡Buenas tardes!', en: 'Good afternoon!' } : { es: '¡Buenas noches!', en: 'Good evening!' };
+  titulo({ es: 'Mi Día', en: 'My Day' });
+  const ps = PUERTAS.filter(p => E.puertas[p.id]);
+  const r = document.createElement('div'); r.className = 'rejilla';
+  for (const p of ps) r.appendChild(carta(p, () => { ir(p.id); hablar(p); }));
+  vista.appendChild(r);
+  acomodar(r, ps.length);
+  hTitulo.onclick = () => hablar(saludo);
+  if (E.estrellas) {
+    const s = document.createElement('div'); s.className = 'estrellas'; s.textContent = `⭐ ${E.estrellas}`;
+    vista.appendChild(s);
+  }
+};
+
+// ---------- Mi día (agenda) ----------
+VISTAS.agenda = () => {
+  revisarDia();
+  titulo({ es: 'Mi día', en: 'My day' });
+  const lista = E.agenda, i = E.dia.i, act = ACT[lista[i]], sig = ACT[lista[i + 1]];
+  const caja = document.createElement('div'); caja.className = 'agenda';
+
+  if (!act) {
+    caja.innerHTML = `<div class="fin-dia"><span class="emo">🌟</span><div>${rot({ es: '¡Terminaste tu día!', en: 'You finished your day!' })}</div>
+      <div style="font-size:18px;color:var(--muted)">${rot({ es: 'Gracias, Dios, por este día.', en: 'Thank you, God, for this day.' })}</div></div>`;
+    caja.style.gridTemplateRows = 'minmax(0,1fr) auto auto';
+    luego(300, () => hablar([{ es: '¡Terminaste tu día!', en: 'You finished your day!' }, { es: 'Gracias, Dios, por este día.', en: 'Thank you, God, for this day.' }]));
+  } else {
+    const ad = document.createElement('div'); ad.className = 'ahora-despues';
+    const m1 = document.createElement('div'); m1.className = 'marco';
+    m1.innerHTML = `<b>${lenguas().map(l => ({ es: 'AHORA', en: 'NOW' })[l]).join(' · ')}</b>`;
+    m1.appendChild(carta(act, () => hablar({ es: 'Ahora: ' + act.es, en: 'Now: ' + act.en }), 'sola'));
+    ad.appendChild(m1);
+    const m2 = document.createElement('div'); m2.className = 'marco despues';
+    m2.innerHTML = `<b>${lenguas().map(l => ({ es: 'DESPUÉS', en: 'THEN' })[l]).join(' · ')}</b>`;
+    m2.appendChild(sig ? carta(sig, () => hablar({ es: 'Después: ' + sig.es, en: 'Then: ' + sig.en }), 'sola')
+                       : carta({ e: '🌟', c: '#fff3c4', es: '¡Fin!', en: 'All done!' }, () => hablar({ es: 'Después, ¡terminamos!', en: 'Then, all done!' }), 'sola'));
+    ad.appendChild(m2);
+    caja.appendChild(ad);
+
+    const ac2 = document.createElement('div'); ac2.className = 'acciones';
+    if (act.r) {
+      const b = document.createElement('button'); b.className = 'boton azul';
+      b.innerHTML = `▶ ${rotChico({ es: 'Paso a paso', en: 'Step by step' })}`;
+      b.onclick = () => { toque(); act.r === 'calma' ? ir('calma') : ir('rutina', { id: act.r, de: 'agenda' }); };
+      ac2.appendChild(b);
+    }
+    const bT = document.createElement('button'); bT.className = 'boton verde';
+    bT.innerHTML = `✓ ${tx({ es: '¡Terminé!', en: 'Done!' }, lenguas()[0])}`;
+    bT.onclick = () => {
+      E.dia.i++; guardar('dia'); ganarEstrella(); festejar(5);
+      const n = ACT[lista[E.dia.i]];
+      ir('agenda');
+      hablar(n ? [{ es: '¡Muy bien!', en: 'Great job!' }, { es: 'Ahora: ' + n.es, en: 'Now: ' + n.en }] : { es: '¡Muy bien!', en: 'Great job!' });
+    };
+    ac2.appendChild(bT);
+    const bE = document.createElement('button'); bE.className = 'boton';
+    bE.innerHTML = `⏳ ${tx({ es: 'Esperar', en: 'Wait' }, lenguas()[0])}`;
+    bE.onclick = () => { toque(); ir('espera'); };
+    ac2.appendChild(bE);
+    caja.appendChild(ac2);
+  }
+
+  // Tira con todo el día
+  const tira = document.createElement('div'); tira.className = 'tira';
+  lista.forEach((id, k) => {
+    const a = ACT[id], m = document.createElement('button');
+    m.className = 'mini' + (k < i ? ' hecho' : '') + (k === i ? ' ahora' : '');
+    m.style.setProperty('--c', a.c);
+    m.innerHTML = `<span class="e">${a.e}</span>${tx(a, lenguas()[0])}`;
+    m.onclick = () => { toque(); hablar(a); };
+    tira.appendChild(m);
+  });
+  caja.appendChild(tira);
+
+  // Atajos a las rutinas
+  const ru = document.createElement('div'); ru.className = 'rutinas';
+  ru.innerHTML = `<span>${tx({ es: 'Paso a paso:', en: 'Step by step:' }, lenguas()[0])}</span>`;
+  for (const [id, r] of Object.entries(RUTINAS)) {
+    const b = document.createElement('button'); b.textContent = r.e; b.title = r.es;
+    b.onclick = () => { toque(); ir('rutina', { id, de: 'agenda' }); };
+    ru.appendChild(b);
+  }
+  if (i > 0) {
+    const b = document.createElement('button'); b.textContent = '↶'; b.title = 'Regresar un paso';
+    b.onclick = () => { toque(); E.dia.i--; guardar('dia'); ir('agenda'); };
+    ru.appendChild(b);
+  }
+  caja.appendChild(ru);
+  vista.appendChild(caja);
+  const ahora = tira.querySelector('.ahora'); if (ahora) ahora.scrollIntoView({ inline: 'center', block: 'nearest' });
+};
+
+// ---------- Rutina paso a paso ----------
+VISTAS.rutina = ({ id, de, paso = 0 }) => {
+  const r = RUTINAS[id];
+  titulo(r);
+  volverA = () => ir(de || 'agenda');
+  const ps = r.pasos;
+  if (paso >= ps.length) {
+    vista.innerHTML = `<div class="centro"><div style="font-size:110px">🌟</div><div>${rot({ es: '¡Lo lograste!', en: 'You did it!' })}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+        <button class="boton" id="otra">🔁 ${tx({ es: 'Otra vez', en: 'Again' }, lenguas()[0])}</button>
+        <button class="boton verde" id="listo">✓ ${tx({ es: 'Listo', en: 'Done' }, lenguas()[0])}</button></div></div>`;
+    festejar(8); ganarEstrella();
+    luego(400, () => hablar([{ es: '¡Lo lograste!', en: 'You did it!' }, { es: '¡Muy bien hecho!', en: 'Well done!' }]));
+    vista.querySelector('#otra').onclick = () => { toque(); ir('rutina', { id, de }); };
+    vista.querySelector('#listo').onclick = () => { toque(); ir(de || 'agenda'); };
+    return;
+  }
+  const [e, es, en] = ps[paso], f = { es, en };
+  const caja = document.createElement('div'); caja.className = 'pasos';
+  caja.innerHTML = `<div class="puntos">${ps.map((_, k) => `<i class="${k <= paso ? 'si' : ''}"></i>`).join('')}</div>
+    <button class="escena"><span class="emo">${e}</span><div>${rot(f)}</div></button>
+    <div class="flechas">
+      <button class="redondo" id="atras" ${paso ? '' : 'style="visibility:hidden"'}>◀</button>
+      <button class="boton verde" id="sig" style="font-size:22px;padding:16px">✓ ${tx({ es: '¡Listo!', en: 'Done!' }, lenguas()[0])}</button>
+      <button class="redondo" id="oir">🔊</button>
+    </div>`;
+  vista.appendChild(caja);
+  const decir = () => hablar(f);
+  caja.querySelector('.escena').onclick = () => { toque(); decir(); };
+  caja.querySelector('#oir').onclick = () => { toque(); decir(); };
+  caja.querySelector('#atras').onclick = () => { toque(); ir('rutina', { id, de, paso: paso - 1 }); };
+  caja.querySelector('#sig').onclick = () => { tono(784, 0.3, 0.05); tono(988, 0.4, 0.04, 0.1); ir('rutina', { id, de, paso: paso + 1 }); };
+  luego(200, decir);
+};
+
+// ---------- Espera (reloj visual) ----------
+VISTAS.espera = (min) => {
+  titulo({ es: 'Esperar', en: 'Wait' });
+  volverA = () => ir('agenda');
+  const caja = document.createElement('div'); caja.className = 'espera';
+  if (!min) {
+    caja.innerHTML = `<div style="font-size:70px">⏳</div><div class="opciones"></div>`;
+    for (const m of [1, 2, 5, 10]) {
+      const o = { e: '⏱️', c: '#d4eef5', es: `${m} ${m === 1 ? 'minuto' : 'minutos'}`, en: `${m} ${m === 1 ? 'minute' : 'minutes'}` };
+      caja.querySelector('.opciones').appendChild(carta(o, () => ir('espera', m)));
+    }
+    vista.appendChild(caja);
+    luego(200, () => hablar({ es: '¿Cuánto tiempo esperamos?', en: 'How long do we wait?' }));
+    return;
+  }
+  const R = 45, C = 2 * Math.PI * R, total = min * 60000, t0 = Date.now();
+  caja.innerHTML = `
+    <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="${R}" fill="#ffffff" stroke="#e6e2da" stroke-width="8"/>
+      <circle id="arco" cx="50" cy="50" r="${R}" fill="none" stroke="#7fb8c9" stroke-width="8" stroke-linecap="round"
+        stroke-dasharray="${C}" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+      <circle id="disco" cx="50" cy="50" r="36" fill="#bfe0ea"/>
+      <text id="reloj" x="50" y="56" text-anchor="middle" font-size="15" font-weight="800" fill="#2f3640"></text></svg>
+    <div id="msg">${rot({ es: 'Esperamos un poquito…', en: 'We wait a little…' })}</div>
+    <button class="boton" id="parar">✋ ${tx({ es: 'Terminar', en: 'Stop' }, lenguas()[0])}</button>`;
+  vista.appendChild(caja);
+  const arco = caja.querySelector('#arco'), disco = caja.querySelector('#disco'), reloj = caja.querySelector('#reloj');
+  hablar({ es: `Vamos a esperar ${min} ${min === 1 ? 'minuto' : 'minutos'}.`, en: `We will wait ${min} ${min === 1 ? 'minute' : 'minutes'}.` });
+  caja.querySelector('#parar').onclick = () => { toque(); ir('agenda'); };
+  let fin = false;
+  cada(250, () => {
+    if (fin) return;
+    const quedan = Math.max(0, total - (Date.now() - t0)), f = quedan / total;
+    arco.setAttribute('stroke-dashoffset', C * (1 - f));
+    disco.setAttribute('r', 8 + 28 * f);
+    const s = Math.ceil(quedan / 1000);
+    reloj.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    if (quedan <= 0) {
+      fin = true; festejar(5);
+      caja.querySelector('#msg').innerHTML = rot({ es: '¡Ya terminó la espera!', en: 'Waiting time is over!' });
+      hablar({ es: '¡Listo! Ya terminó la espera. Esperaste muy bien.', en: 'All done! Waiting time is over. You waited so well.' });
+    }
+  });
+};
+
+// ---------- ¿Cómo me siento? ----------
+VISTAS.sentir = (id) => {
+  titulo({ es: '¿Cómo me siento?', en: 'How do I feel?' });
+  if (!id) {
+    const r = document.createElement('div'); r.className = 'rejilla';
+    for (const em of EMOCIONES) r.appendChild(carta(em, () => ir('sentir', em.id)));
+    vista.appendChild(r);
+    acomodar(r, EMOCIONES.length);
+    return;
+  }
+  volverA = () => ir('sentir');
+  const em = EMOCIONES.find(x => x.id === id);
+  const d = document.createElement('div'); d.className = 'sentir-detalle';
+  d.innerHTML = `<div class="cara">${em.e}</div><div class="dice">${rot(em.di)}</div>
+    <div class="resp">${rot(em.resp)}</div>
+    <h2 class="sub">${rotChico({ es: '¿Qué me ayuda?', en: 'What helps me?' })}</h2>
+    <div class="ayudas"></div>`;
+  const ay = d.querySelector('.ayudas');
+  ay.appendChild(carta({ e: '🙋', c: '#ffd5d0', es: 'Avisar a un adulto', en: 'Tell a grown-up' },
+    () => hablar({ es: 'Necesito ayuda, por favor.', en: 'I need help, please.' })));
+  for (const h of CALMA) ay.appendChild(carta(h, () => ir('herramienta', h.id)));
+  vista.appendChild(d);
+  hablar([em.di, em.resp]);
+  d.querySelector('.cara').onclick = () => hablar([em.di, em.resp]);
+};
+
+// ---------- Rincón de calma ----------
+VISTAS.calma = () => {
+  titulo({ es: 'Rincón de calma', en: 'Calm corner' });
+  const fr = document.createElement('div'); fr.className = 'frases';
+  for (const p of PEDIR) {
+    const b = document.createElement('button'); b.className = 'boton';
+    b.innerHTML = `${p.e} ${tx(p.b, lenguas()[0])}`;
+    b.onclick = () => { toque(); hablar(p); };
+    fr.appendChild(b);
+  }
+  vista.appendChild(fr);
+  const r = document.createElement('div'); r.className = 'rejilla';
+  for (const h of CALMA) r.appendChild(carta(h, () => luego(250, () => ir('herramienta', h.id))));
+  vista.appendChild(r);
+  r.style.height = `calc(100% - ${fr.offsetHeight + 14}px)`;
+  acomodar(r, CALMA.length);
+};
+
+VISTAS.herramienta = (id) => {
+  const h = CALMA.find(x => x.id === id);
+  titulo(h);
+  volverA = () => ir('calma');
+  HERRAMIENTAS[id]();
+};
+
+const HERRAMIENTAS = {
+  respirar() {
+    vista.innerHTML = `<div class="centro"><div class="globo"></div><div id="txt"></div><div id="cuenta" style="color:var(--muted);font-weight:700"></div></div>`;
+    const globo = vista.querySelector('.globo'), txt = vista.querySelector('#txt'), cuenta = vista.querySelector('#cuenta');
+    const CICLOS = 5, T = 4;   // 4 s inhalar, 4 s exhalar
+    let t0 = null, fase = -1;
+    const fin = () => {
+      txt.innerHTML = rot({ es: '¡Muy bien! Tu cuerpo está más tranquilo.', en: 'Great job! Your body is calmer.' });
+      cuenta.innerHTML = `<button class="boton" id="otra">🔁 ${tx({ es: 'Otra vez', en: 'Again' }, lenguas()[0])}</button>`;
+      vista.querySelector('#otra').onclick = () => { toque(); ir('herramienta', 'respirar'); };
+      hablar({ es: '¡Muy bien! Tu cuerpo está más tranquilo.', en: 'Great job! Your body is calmer.' });
+      ganarEstrella();
+    };
+    hablar({ es: 'Mira el globo. Respiramos juntos.', en: 'Watch the balloon. We breathe together.' }, () => {
+      cuadro(now => {
+        t0 ??= now;
+        const s = (now - t0) / 1000, ciclo = Math.floor(s / (2 * T)), en = s % (2 * T), inh = en < T;
+        if (ciclo >= CICLOS) { globo.style.transform = 'scale(.45)'; fin(); return false; }
+        const p = inh ? en / T : 1 - (en - T) / T;
+        globo.style.transform = `scale(${0.45 + 0.55 * (0.5 - 0.5 * Math.cos(Math.PI * p))})`;
+        const nf = ciclo * 2 + (inh ? 0 : 1);
+        if (nf !== fase) {
+          fase = nf;
+          const f = inh ? { es: 'Inhala…', en: 'Breathe in…' } : { es: 'Exhala…', en: 'Breathe out…' };
+          txt.innerHTML = rot(f); cuenta.textContent = `${ciclo + 1} / ${CICLOS}`;
+          if (E.idioma === 'ambos') hablar({ es: f.es, en: '' }); else hablar(f);   // cortito para no tapar la respiración
+          tono(inh ? 330 : 392, T - 0.3, 0.035, 0, T * 0.5);
+        }
+      });
+    });
+  },
+
+  burbujas() {
+    vista.style.overflowY = 'hidden';
+    vista.innerHTML = `<div class="burbujas"></div><div class="centro sobre" style="pointer-events:none;height:auto;padding-top:20px"><div>${rot({ es: 'Toca las burbujas', en: 'Pop the bubbles' })}</div></div>`;
+    const caja = vista.querySelector('.burbujas');
+    hablar({ es: 'Toca las burbujas, despacito.', en: 'Pop the bubbles, nice and slow.' });
+    const nueva = () => {
+      if (caja.children.length >= 10) return;
+      const b = document.createElement('div'), d = 60 + Math.random() * 70;
+      b.className = 'burbuja';
+      b.style.width = b.style.height = d + 'px';
+      b.style.left = (Math.random() * 85) + '%';
+      b.style.setProperty('--dx', ((Math.random() - 0.5) * 120) + 'px');
+      b.style.animationDuration = (10 + Math.random() * 6) + 's';
+      b.addEventListener('animationend', () => b.remove());
+      b.addEventListener('pointerdown', () => {
+        if (b.classList.contains('pum')) return;
+        const t = getComputedStyle(b).transform, aqui = t === 'none' ? '' : t;   // revienta donde está, no abajo
+        b.style.transform = aqui; b.style.setProperty('--t', aqui);
+        b.classList.add('pum');
+        tono(PENTA[Math.floor(Math.random() * PENTA.length)] * 1.5, 0.35, 0.05);
+      });
+      caja.appendChild(b);
+    };
+    for (let k = 0; k < 4; k++) luego(k * 400, nueva);
+    cada(1100, nueva);
+  },
+
+  musica() {
+    vista.style.overflowY = 'hidden';
+    vista.innerHTML = `<div class="manchas"><i></i><i></i><i></i></div>
+      <div class="centro sobre"><div style="font-size:80px">🎶</div><div>${rot({ es: 'Escucha la música suave', en: 'Listen to the soft music' })}</div>
+      <div style="color:var(--muted);font-size:16px">${rot({ es: 'Respira despacio y descansa.', en: 'Breathe slowly and rest.' })}</div></div>`;
+    hablar({ es: 'Escucha la música suave.', en: 'Listen to the soft music.' });
+    if (!E.sonidos) return;
+    let k = 0;
+    const nota = () => {
+      const f = PENTA[Math.floor(Math.random() * 7)];
+      tono(f, 3.5, 0.045, 0, 0.8);
+      if (k++ % 3 === 0) tono(f / 2, 5, 0.03, 0, 1.5);   // bajo suave de vez en cuando
+    };
+    luego(1500, nota);
+    cada(1700, () => { if (Math.random() < 0.8) nota(); });
+  },
+
+  mariposa() {
+    vista.innerHTML = `<div class="centro"><div style="font-size:70px">🦋</div>
+      <div class="manos"><span id="izq">🤚</span><span id="der">✋</span></div><div id="txt"></div><div id="cuenta" style="color:var(--muted);font-weight:700"></div></div>`;
+    const txt = vista.querySelector('#txt'), cuenta = vista.querySelector('#cuenta'), izq = vista.querySelector('#izq'), der = vista.querySelector('#der');
+    const inst = { es: 'Cruza tus brazos sobre tu pecho, como una mariposa. Da palmaditas suaves: una mano, luego la otra.', en: 'Cross your arms over your chest, like a butterfly. Tap gently: one hand, then the other.' };
+    txt.innerHTML = rot(inst);
+    hablar(inst, () => {
+      let n = 0;
+      const id = cada(1100, () => {
+        n++;
+        const lado = n % 2 ? izq : der, otro = n % 2 ? der : izq;
+        lado.classList.add('toca'); otro.classList.remove('toca');
+        tono(n % 2 ? 392 : 330, 0.5, 0.04);
+        cuenta.textContent = `${n} / 16`;
+        if (n >= 16) {
+          clearInterval(id); lado.classList.remove('toca');
+          txt.innerHTML = rot({ es: '¡Muy bien! Estás a salvo y Dios te ama.', en: 'Great job! You are safe and God loves you.' });
+          hablar({ es: '¡Muy bien! Estás a salvo y Dios te ama.', en: 'Great job! You are safe and God loves you.' });
+          ganarEstrella();
+        }
+      });
+    });
+  },
+
+  contar() {
+    vista.innerHTML = `<div class="centro"><div id="txt">${rot({ es: 'Contamos despacio', en: 'We count slowly' })}</div>
+      <div class="conteo">${Array.from({ length: 10 }, (_, k) => `<i>${k + 1}</i>`).join('')}</div><div id="fin"></div></div>`;
+    const ps = vista.querySelectorAll('.conteo i');
+    const paso = n => {
+      if (n > 10) {
+        vista.querySelector('#fin').innerHTML = `<button class="boton" id="otra">🔁 ${tx({ es: 'Otra vez', en: 'Again' }, lenguas()[0])}</button>`;
+        vista.querySelector('#otra').onclick = () => { toque(); ir('herramienta', 'contar'); };
+        hablar({ es: '¡Muy bien! Contaste hasta diez.', en: 'Great job! You counted to ten.' });
+        ganarEstrella();
+        return;
+      }
+      ps[n - 1].classList.add('si');
+      tono(PENTA[n - 1], 0.6, 0.04);
+      hablar({ es: NUM.es[n], en: NUM.en[n] }, () => luego(700, () => paso(n + 1)));
+    };
+    hablar({ es: 'Contamos despacio, juntos.', en: 'We count slowly, together.' }, () => luego(500, () => paso(1)));
+  },
+
+  orar() {
+    const ora = { es: 'Dios, gracias porque me cuidas y me amas. Ayúdame a estar en calma. Amén.', en: 'God, thank you for taking care of me and loving me. Help me feel calm. Amen.' };
+    const ver = { es: 'Cuando tengo miedo, confío en ti. (Salmo 56:3)', en: 'When I am afraid, I trust in you. (Psalm 56:3)' };
+    vista.innerHTML = `<div class="centro" style="max-width:640px;margin:0 auto"><div style="font-size:90px">🙏</div><div>${rot(ora)}</div>
+      <div style="font-size:15px;opacity:.85">${rot(ver)}</div><button class="redondo" id="oir">🔊</button></div>`;
+    vista.querySelectorAll('.centro .es').forEach(s => s.style.fontSize = '24px');
+    const decir = () => hablar([ora, ver]);
+    vista.querySelector('#oir').onclick = () => { toque(); decir(); };
+    luego(300, decir);
+  },
+};
+
+// ---------- Historias ----------
+VISTAS.historias = () => {
+  titulo({ es: 'Historias', en: 'Stories' });
+  const l = document.createElement('div'); l.className = 'lista-hist';
+  for (const h of HISTORIAS) l.appendChild(carta(h, () => ir('historia', { id: h.id }), E.leidas.includes(h.id) ? 'leida' : ''));
+  vista.appendChild(l);
+};
+
+VISTAS.historia = ({ id, pag = 0 }) => {
+  const h = HISTORIAS.find(x => x.id === id);
+  titulo(h);
+  volverA = () => ir('historias');
+  if (pag >= h.p.length) {
+    vista.innerHTML = `<div class="centro"><div style="font-size:100px">⭐</div><div>${rot({ es: 'Fin', en: 'The end' })}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+        <button class="boton" id="otra">🔁 ${tx({ es: 'Leer otra vez', en: 'Read again' }, lenguas()[0])}</button>
+        <button class="boton verde" id="mas">📖 ${tx({ es: 'Más historias', en: 'More stories' }, lenguas()[0])}</button></div></div>`;
+    if (!E.leidas.includes(id)) { E.leidas.push(id); guardar('leidas'); }
+    festejar(6); ganarEstrella();
+    hablar({ es: 'Fin. ¡Muy bien!', en: 'The end. Great job!' });
+    vista.querySelector('#otra').onclick = () => { toque(); ir('historia', { id }); };
+    vista.querySelector('#mas').onclick = () => { toque(); ir('historias'); };
+    return;
+  }
+  const [e, es, en] = h.p[pag], f = { es, en };
+  const caja = document.createElement('div'); caja.className = 'pasos';
+  caja.innerHTML = `<div class="puntos">${h.p.map((_, k) => `<i class="${k <= pag ? 'si' : ''}"></i>`).join('')}</div>
+    <button class="escena"><span class="emo">${e}</span><div>${rot(f)}</div></button>
+    <div class="flechas">
+      <button class="redondo" id="atras" ${pag ? '' : 'style="visibility:hidden"'}>◀</button>
+      <button class="redondo" id="oir" style="justify-self:center">🔊</button>
+      <button class="redondo" id="sig" style="background:#bfe8c9">▶</button>
+    </div>`;
+  vista.appendChild(caja);
+  const decir = () => hablar(f);
+  caja.querySelector('.escena').onclick = () => { toque(); decir(); };
+  caja.querySelector('#oir').onclick = () => { toque(); decir(); };
+  caja.querySelector('#atras').onclick = () => { toque(); ir('historia', { id, pag: pag - 1 }); };
+  caja.querySelector('#sig').onclick = () => { toque(); ir('historia', { id, pag: pag + 1 }); };
+  luego(250, decir);
+};
+
+// ---------- Hablo (frases con dibujos) ----------
+let frase = [], catActual = 'comer';
+VISTAS.hablo = () => {
+  titulo({ es: 'Hablo', en: 'I talk' });
+  const caja = document.createElement('div'); caja.className = 'hablo';
+  caja.innerHTML = `
+    <div class="tira-frase"><div class="piezas"></div>
+      <button class="redondo" id="borrar" title="Borrar">⌫</button>
+      <button class="redondo decir" id="decir" title="Decir">▶</button></div>
+    <div class="fila-scroll" id="inicios"></div>
+    <div class="fila-scroll" id="cats"></div>
+    <div class="palabras"></div>`;
+  vista.appendChild(caja);
+  vista.style.overflowY = 'hidden';
+  const piezas = caja.querySelector('.piezas'), palabras = caja.querySelector('.palabras');
+
+  const pintarFrase = () => {
+    piezas.innerHTML = '';
+    for (const w of frase) {
+      const d = document.createElement('div'); d.className = 'pieza'; d.style.setProperty('--c', w.c);
+      d.innerHTML = `<span class="e">${w.e}</span>${tx(w, lenguas()[0])}`;
+      piezas.appendChild(d);
+    }
+    piezas.scrollLeft = piezas.scrollWidth;
+  };
+  const agregar = w => {
+    toque();
+    if (frase.length >= 8) frase.shift();
+    frase.push(w); pintarFrase(); hablar(w);
+  };
+  caja.querySelector('#borrar').onclick = () => { toque(); frase.pop(); pintarFrase(); };
+  caja.querySelector('#borrar').oncontextmenu = e => { e.preventDefault(); frase = []; pintarFrase(); };
+  caja.querySelector('#decir').onclick = () => {
+    if (!frase.length) return;
+    tono(784, 0.25, 0.04);
+    hablar({ es: frase.map(w => w.es).join(' '), en: frase.map(w => w.en).join(' ') });
+    piezas.classList.remove('salta'); void piezas.offsetWidth; piezas.classList.add('salta');
+  };
+
+  const ini = caja.querySelector('#inicios');
+  for (const w of INICIOS) {
+    const b = document.createElement('button'); b.className = 'inicio-frase'; b.style.setProperty('--c', w.c);
+    b.innerHTML = `${w.e} <span>${tx(w, lenguas()[0])}</span>${lenguas()[1] ? `<small>${tx(w, 'en')}</small>` : ''}`;
+    b.onclick = () => agregar(w);
+    ini.appendChild(b);
+  }
+  const cats = caja.querySelector('#cats');
+  const pintarCat = () => {
+    cats.innerHTML = '';
+    for (const c of CATEGORIAS) {
+      const b = document.createElement('button'); b.className = 'pestana' + (c.id === catActual ? ' si' : '');
+      b.textContent = `${c.e} ${tx(c, lenguas()[0])}`;
+      b.onclick = () => { toque(); catActual = c.id; pintarCat(); hablar(c); };
+      cats.appendChild(b);
+    }
+    const c = CATEGORIAS.find(x => x.id === catActual);
+    palabras.innerHTML = ''; palabras.scrollTop = 0;
+    for (const [e, es, en] of c.w) {
+      const w = { e, es, en, c: c.c };
+      const b = carta(w, () => { frase.length >= 8 && frase.shift(); frase.push(w); pintarFrase(); hablar(w); });
+      palabras.appendChild(b);
+    }
+  };
+  pintarCat(); pintarFrase();
+};
+
+// =====================================================================
+//  PANEL PARA ADULTOS
+// =====================================================================
+const panel = document.getElementById('panel'), cuerpo = document.getElementById('cuerpoPanel');
+function radio(nombre, valor, actual, texto) {
+  return `<label class="opcion"><input type="radio" name="${nombre}" value="${valor}" ${actual === valor ? 'checked' : ''}>${texto}</label>`;
+}
+function pintarPanel() {
+  revisarDia();
+  cuerpo.innerHTML = `
+    <p>Esta app está diseñada pensando en niños neurodivergentes de 3 a 10 años. Es un apoyo para la familia: <b>no sustituye la terapia</b>. Coordina las rutinas, historias y la comunicación con su terapeuta. Todo se guarda solo en este aparato.</p>
+    <h3>Idioma / Language</h3>
+    ${radio('idioma', 'ambos', E.idioma, 'Bilingüe (español + English)')}${radio('idioma', 'es', E.idioma, 'Español')}${radio('idioma', 'en', E.idioma, 'English')}
+    <h3>¿Para un niño o una niña?</h3>
+    <p>Cambia frases como "Estoy cansado / cansada".</p>
+    ${radio('genero', 'o', E.genero, 'Niño')}${radio('genero', 'a', E.genero, 'Niña')}
+    <h3>Voz y sonidos</h3>
+    <label class="opcion"><input type="checkbox" id="lento" ${E.lento ? 'checked' : ''}>Voz más despacio</label>
+    <label class="opcion"><input type="checkbox" id="sonidos" ${E.sonidos ? 'checked' : ''}>Sonidos y música suaves</label>
+    <h3>Puertas que se ven en el inicio</h3>
+    <p>Para los más pequeños, empieza con pocas (por ejemplo, Hablo y Rincón de calma).</p>
+    ${PUERTAS.map(p => `<label class="opcion"><input type="checkbox" data-puerta="${p.id}" ${E.puertas[p.id] ? 'checked' : ''}>${p.e} ${p.es}</label>`).join('')}
+    <h3>📅 Mi día: la agenda</h3>
+    <p>Ordena las actividades de un día normal. Cada noche la agenda vuelve a empezar sola.</p>
+    <div class="lista-agenda">${E.agenda.map((id, k) => `<div class="fila"><span class="e">${ACT[id].e}</span><span>${ACT[id].es}${k < E.dia.i ? ' ✓' : k === E.dia.i ? ' ← ahora' : ''}</span>
+      <span class="b"><button data-sube="${k}">↑</button><button data-baja="${k}">↓</button><button data-quita="${k}">✕</button></span></div>`).join('')}</div>
+    <p style="margin-top:10px">Toca para agregar:</p>
+    <div class="biblioteca">${Object.entries(ACT).map(([id, a]) => `<button data-agrega="${id}"><span>${a.e}</span>${a.es}</button>`).join('')}</div>
+    <p style="margin-top:10px"><button class="boton chico" id="reiniciarDia">↺ Empezar el día otra vez</button>
+      <button class="boton chico" id="agendaInicial">Agenda de ejemplo</button></p>
+    <h3>Estrellas</h3>
+    <p>Lleva ⭐ ${E.estrellas}. Se ganan al terminar rutinas, historias y ejercicios de calma (nunca se pierden).</p>
+    <h3>Pantalla</h3>
+    <p><button class="boton chico" id="completa">⛶ Pantalla completa</button></p>
+    <h3>Borrar</h3>
+    <p><button class="boton chico" id="borrarTodo">🗑 Borrar todo y empezar de cero</button></p>`;
+
+  cuerpo.querySelectorAll('input[name=idioma]').forEach(r => r.onchange = () => { E.idioma = r.value; guardar('idioma'); });
+  cuerpo.querySelectorAll('input[name=genero]').forEach(r => r.onchange = () => { E.genero = r.value; guardar('genero'); });
+  cuerpo.querySelector('#lento').onchange = e => { E.lento = e.target.checked; guardar('lento'); };
+  cuerpo.querySelector('#sonidos').onchange = e => { E.sonidos = e.target.checked; guardar('sonidos'); };
+  cuerpo.querySelectorAll('[data-puerta]').forEach(c => c.onchange = () => {
+    E.puertas[c.dataset.puerta] = c.checked;
+    if (!Object.values(E.puertas).some(Boolean)) { E.puertas[c.dataset.puerta] = true; c.checked = true; }   // al menos una
+    guardar('puertas');
+  });
+  const cambiarAgenda = () => { guardar('agenda'); E.dia.i = Math.min(E.dia.i, E.agenda.length); guardar('dia'); pintarPanel(); };
+  cuerpo.querySelectorAll('[data-sube]').forEach(b => b.onclick = () => { const k = +b.dataset.sube; if (k > 0) [E.agenda[k - 1], E.agenda[k]] = [E.agenda[k], E.agenda[k - 1]]; cambiarAgenda(); });
+  cuerpo.querySelectorAll('[data-baja]').forEach(b => b.onclick = () => { const k = +b.dataset.baja; if (k < E.agenda.length - 1) [E.agenda[k + 1], E.agenda[k]] = [E.agenda[k], E.agenda[k + 1]]; cambiarAgenda(); });
+  cuerpo.querySelectorAll('[data-quita]').forEach(b => b.onclick = () => { const k = +b.dataset.quita; E.agenda.splice(k, 1); if (k < E.dia.i) E.dia.i--; cambiarAgenda(); });
+  cuerpo.querySelectorAll('[data-agrega]').forEach(b => b.onclick = () => { E.agenda.push(b.dataset.agrega); cambiarAgenda(); });
+  cuerpo.querySelector('#reiniciarDia').onclick = () => { E.dia = { fecha: hoy(), i: 0 }; guardar('dia'); pintarPanel(); };
+  cuerpo.querySelector('#agendaInicial').onclick = () => { if (confirm('¿Cambiar la agenda por la de ejemplo?')) { E.agenda = [...AGENDA_INICIAL]; E.dia = { fecha: hoy(), i: 0 }; guardar('dia'); cambiarAgenda(); } };
+  cuerpo.querySelector('#completa').onclick = () => { const d = document.documentElement; (d.requestFullscreen || d.webkitRequestFullscreen)?.call(d); };
+  cuerpo.querySelector('#borrarTodo').onclick = () => {
+    if (!confirm('¿Borrar la agenda, las estrellas y todos los ajustes de este aparato?')) return;
+    try { Object.keys(localStorage).filter(k => k.startsWith('midia.')).forEach(k => localStorage.removeItem(k)); } catch {}
+    location.reload();
+  };
+}
+function abrirPanel() { callar(); pintarPanel(); panel.classList.add('abierto'); }
+document.getElementById('cerrar').onclick = () => { panel.classList.remove('abierto'); ir('inicio'); };
+
+const bCand = document.getElementById('candado');
+let tCand = null;
+bCand.addEventListener('pointerdown', () => {
+  bCand.classList.add('cargando');
+  tCand = setTimeout(() => { tCand = null; bCand.classList.remove('cargando'); abrirPanel(); }, 3000);
+});
+const soltarCandado = () => { if (tCand) { clearTimeout(tCand); tCand = null; bCand.classList.remove('cargando'); } };
+['pointerup', 'pointerleave', 'pointercancel'].forEach(t => bCand.addEventListener(t, soltarCandado));
+addEventListener('contextmenu', e => e.preventDefault());
+
+ir('inicio');
+</script>
+</body>
+</html>
